@@ -1,0 +1,48 @@
+execute
+	down 5 + 3 .
+	down 6 * - (5 + 3).
+	down ~~true .
+	up 3 = 	4.
+	down true /\ false /\ true.
+	activate bombona.
+	activate bombona, bombonita.
+	collect as bombona.
+	if bar > 2:
+		advance contador.
+		if bar > 3:
+			read.
+			if bar > 4:
+				deactivate bombonita.
+				down 1.
+				while bar < 100:
+					deactivate bombonita.
+				end
+			else
+				activate bombona.
+			end
+		end
+	else
+		advance bolitero.
+		while i < n:
+			send.
+			while j < i:
+				up 2.
+			end
+		end
+	end
+	while i < n:
+		if i = 20:
+			while i < 50:
+				read.
+			end
+		else
+			send.
+		end
+		while j < i:
+			down 4.
+			while j < k:
+				left 7.
+			end
+		end
+	end
+end

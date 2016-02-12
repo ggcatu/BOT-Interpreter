@@ -75,8 +75,8 @@ class intr_extra : public ArbolSintactico {
 		intr_extra(ArbolSintactico * l, int m) : down(l), movimiento(static_cast<mov>(m)) {}
 		virtual void imprimir(int i){
 			for (int j = 0; j < i; j++) cout << "	";
-			switch(movimiento){
-				case STORE:
+			switch(movimiento)
+{				case STORE:
 					cout << "STORE:" << endl;
 					break;
 				case DROP:
@@ -120,7 +120,7 @@ class intr_guardia : public ArbolSintactico {
 			if (cuerpo_else != NULL){
 				for (int j = 0; j < i; j++) cout << "	";
 					cout << "ELSE: " << endl;
-					cuerpo -> imprimir(i + i);
+					cuerpo_else -> imprimir(i + i);
 			}
 		}
 };

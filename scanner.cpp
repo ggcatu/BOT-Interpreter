@@ -22,7 +22,6 @@ de las clases y funciones implementadas en definiciones.cpp
 
 using namespace std;
 
-
 /*
 Funciones importadas de lex.yy.c, provenientes de FLEX.
 	yylex permite leer el próximo token.
@@ -31,6 +30,7 @@ Funciones importadas de lex.yy.c, provenientes de FLEX.
 	yytext es un apuntador al inicio del token actual.
 	yyin es un apuntador al input stream de yylex.
 */
+
 extern int yylex();
 extern int yylineno;
 extern int yyleng;

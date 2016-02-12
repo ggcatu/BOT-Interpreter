@@ -1,0 +1,139 @@
+%error-verbose
+%{
+#include <iostream>
+using namespace std;
+
+int yylex(void);
+void yyerror (char const *s) {
+   cout << "Parse error:" << s << "\n"; 
+}
+#define YYDEBUG 1
+%}
+
+%start S
+
+%left IGUAL MENOR MAYOR
+%left SUMA RESTA
+%left MULT DIV MOD
+%nonassoc UMIN
+%nonassoc TRY
+
+%union {	
+			int num; 
+			bool boolean;
+			char* str;
+		}
+
+%token ENTER
+%token SUMA RESTA MULT DIV MOD
+%token MENOR MAYOR IGUAL MENORIGUAL MAYORIGUAL
+%token PARABRE PARCIERRA
+%token CONJUNCION DISYUNCION NEGACION
+%token COMA PUNTO DOSPUNTOS
+%token BOT CREATE EXECUTE ACTIVATE DEACTIVATE STORE COLLECT DROP ADVANCE ON
+%token ACTIVATION DEACTIVATION DEFAULT
+%token UP DOWN LEFT RIGHT
+%token READ SEND RECEIVE
+%token IF ELSE END WHILE
+%token INT BOOL CHAR
+%token CHARACTER
+
+%token <num> number
+%token <str> IDENTIFIER
+%token <boolean> TRUE FALSE
+%type <boolean> exprRel exprBool exprLogic
+
+%type <num> exprArit expr 
+%type <str> S decl exec instr instrs lDecs declaracion tipo lComp condicion
+
+%%
+
+S			: exec 												{cout << "EXECUTE" << endl ;}
+			| CREATE lDecs exec 								{cout << "CREATE " << $2 << "EXECUTE " <<endl;}
+			;
+
+lDecs 		: declaracion										{;}
+			| lDecs declaracion									{;}
+			;
+
+declaracion : tipo BOT decl END 								{$$ = $3;}
+			| tipo BOT decl lComp END 							{$$ = $3;}
+			;
+
+lComp		: ON condicion DOSPUNTOS instrs END 				{;}
+			| lComp ON condicion DOSPUNTOS instrs END  			{;}
+			;
+
+decl		: IDENTIFIER COMA decl								{cout << "var: " << $1 << endl;}
+			| IDENTIFIER										{cout << "var: " << $1 << endl;}
+			;
+
+tipo 		: INT  												{;}
+			| BOOL 												{;}
+			| CHAR 												{;}
+
+condicion  	: ACTIVATION										{;}
+			| DEACTIVATION										{;}
+			| DEFAULT											{;}
+			| exprBool											{;}
+			;
+
+exec		: EXECUTE instrs END								{;}
+			;
+
+instrs		: instr												{;}
+			| instrs instr 										{;}
+			;
+
+instr		: ACTIVATE decl	PUNTO								{cout << "ACTIVATE\n";}
+			| DEACTIVATE decl PUNTO								{cout << "soy un deactivate\n";}
+			| STORE expr PUNTO									{cout << "soy un store\n";}
+			| COLLECT PUNTO										{cout << "soy un collect\n";}
+			| COLLECT "as" decl PUNTO							{cout << "soy un collect as\n";}
+			| DROP expr PUNTO									{cout << "soy un drop\n";}
+			| UP expr PUNTO										{cout << "soy un up\n";}
+			| DOWN expr PUNTO									{cout << "soy un down\n";}
+			| LEFT expr PUNTO									{cout << "soy un left\n";}
+			| RIGHT expr PUNTO									{cout << "soy un right\n";}
+			| READ PUNTO										{cout << "soy un read\n";}
+			| READ "as" decl PUNTO								{cout << "soy un read as\n";}
+			| SEND PUNTO										{cout << "soy un send\n";}
+			| ADVANCE decl PUNTO								{cout << "soy un advance\n";}
+			| RECEIVE PUNTO										{cout << "soy un receive\n";}
+			| IF exprBool DOSPUNTOS instr END					{cout << "soy un if\n";}
+			| IF exprBool DOSPUNTOS instr ELSE instr END		{cout << "soy un ifElse\n";}
+			| WHILE exprBool DOSPUNTOS instr END				{cout << "soy un while\n";}
+
+expr		: exprArit											{;}
+			| exprBool											{;}
+			| CHARACTER											{;}
+			;
+
+exprArit	: exprArit SUMA exprArit							{$$ = $1 + $3;}
+			| exprArit RESTA exprArit 							{$$ = $1 - $3;}
+			| exprArit MULT exprArit							{$$ = $1 * $3;}
+			| exprArit DIV exprArit								{$$ = $1 / $3;}
+			| exprArit MOD exprArit								{$$ = $1 % $3;}
+			| PARABRE exprArit PARCIERRA						{$$ = $2;}
+			| RESTA exprArit 									{$$ = -$2;}
+			| number											{$$ = $1;}
+			;
+
+exprBool	: exprRel											{;}
+			| exprLogic											{;}
+
+exprRel		: exprArit IGUAL exprArit							{$$ = $1 == $3;}
+			| exprArit MENOR exprArit							{$$ = $1 < $3;}
+			| exprArit MAYOR exprArit							{$$ = $1 > $3;}
+			| exprArit MENORIGUAL exprArit						{$$ = $1 <= $3;}
+			| exprArit MAYORIGUAL exprArit						{$$ = $1 >= $3;}
+			| PARABRE exprRel PARCIERRA							{;}
+			| TRUE												{;}
+			| FALSE												{;}
+			;
+
+exprLogic	: exprRel CONJUNCION exprRel						{$$ = $1 && $3;}
+			| exprRel DISYUNCION exprRel						{$$ = $1 | $3;}
+			| NEGACION exprRel									{$$ = !$2;}
+			;
+

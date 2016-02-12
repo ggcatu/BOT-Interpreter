@@ -1,0 +1,18 @@
+execute
+	down 5 + 3 .
+	down 6 * - (5 + 3).
+	down ~~true .
+	up 3 = 	4.
+	down true /\ false /\ true.
+	activate bombona.
+	activate bombona, bombonita.
+	collect as bombona.
+	if bar > 2:
+		advance contador.
+		if bar > 3:
+			read.
+		end
+	else
+		advance bolitero.
+	end
+end

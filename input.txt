@@ -1,4 +1,4 @@
-execute
+execute!
 	down 5 + 3 .
 	down 6 * - (5 + 3).
 	down ~~true .
@@ -15,4 +15,5 @@ execute
 	else
 		advance bolitero.
 	end
-end
+!
+end!

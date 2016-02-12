@@ -1,17 +1,23 @@
 %error-verbose
 %{
 #include <iostream>
+#include "definiciones.h"
 #include "ast.h"
 using namespace std;
 
 int yylex(void);
+
+ArbolSintactico * root_ast;
+
+#define YYDEBUG 1
+
 void yyerror (char const *s) {
    cout << "Parse error:" << s << "\n"; 
 }
-ArbolSintactico * root_ast;
-#define YYDEBUG 1
+
 %}
 
+%locations
 %start S
 
 %left IGUAL MENOR MAYOR

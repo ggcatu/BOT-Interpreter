@@ -141,6 +141,3 @@ exprArit	: exprArit SUMA exprArit							{$$ = new expr_aritmetica($1,$3,0);}
 			| number											{$$ = new numero($1);}
 			| IDENTIFIER										{$$ = new identificador($1);}
 			;
-
-
-

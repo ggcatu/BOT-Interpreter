@@ -39,7 +39,8 @@ extern FILE* yyin;
 extern int yyparse();
 extern void yyerror(const char *);
 extern ArbolSintactico * root_ast;
- 
+extern vector<Token *> errors;
+
 int main(int argc, char** argv) {
 	// // Vectores donde se guardarán nuestros resultados de la tokenización
 	// vector<Token *> tokens;
@@ -107,6 +108,9 @@ int main(int argc, char** argv) {
 	// 	print_errors(errors);
 	// }
 	yyparse();
+	if (!errors.empty()){
+		print_errors(errors);
+	}
 	root_ast->imprimir(0);
 	return 0;
 }

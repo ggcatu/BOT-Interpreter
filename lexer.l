@@ -2,16 +2,26 @@
 #include "ast.h"
 #include "definiciones.h"
 #include "parser.tab.h" 
+
 using namespace std;
+vector<Token *> errors;
+int yycolumn = 1;
+
+#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno; \
+    yylloc.first_column = yycolumn; yylloc.last_column = yycolumn + yyleng - 1; \
+    yycolumn += yyleng; \
+    yylval.str = strdup(yytext);
 %}
+
 %option yylineno
 
 %%
 
 "me"							return ME;
-[ ] 							;
-\t								;
-\n								;
+[ ] 							{ }
+\t								{ }
+\n								{yycolumn = 1;}
+\r 								{ }
 "true"							return TRUE;
 "false"							return FALSE;
 ,								return COMA;
@@ -66,7 +76,7 @@ using namespace std;
 \$\$.*							return COMENTARIO;
 \$\-[^\-\$]*\-\$				return COMENTARIO;
 [0-9]+[a-zA-Z0-9]+				;
-.								;
+.								{errors.push_back(new TokenError(0, yycolumn-1, yylineno, yytext));}
 
 %%
 

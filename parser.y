@@ -19,6 +19,8 @@ ArbolSintactico * root_ast;
 %left MULT DIV MOD
 %left CONJUNCION DISYUNCION
 %right NEGACION
+%precedence DOSPUNTOS
+%precedence ELSE
 
 %union {	
 			int num; 
@@ -107,8 +109,8 @@ instr		: ACTIVATE decl	PUNTO								{$$ = new intr_robot($2, 0);}
 			| LEFT expr PUNTO									{$$ = new intr_movimiento($2,2);}
 			| RIGHT expr PUNTO									{$$ = new intr_movimiento($2,3);}
 
-			| IF exprLogic DOSPUNTOS instr END					{$$ = new intr_guardia($2,$4,0);}
-			| IF exprLogic DOSPUNTOS instr ELSE instr END		{$$ = new intr_guardia($2,$4,$6,1);}
+			| IF exprLogic DOSPUNTOS instrs END					{$$ = new intr_guardia($2,$4,0);}
+			| IF exprLogic DOSPUNTOS instrs ELSE instrs END		{$$ = new intr_guardia($2,$4,$6,1);}
 			| WHILE exprLogic DOSPUNTOS instr END				{$$ = new intr_guardia($2,$4,2);}
 
 expr		: exprArit											{$$ = $1;}

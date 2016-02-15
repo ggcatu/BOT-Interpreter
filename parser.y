@@ -5,14 +5,15 @@
 #include "ast.h"
 using namespace std;
 
-int yylex(void);
-
-ArbolSintactico * root_ast;
-
 #define YYDEBUG 1
 
+extern int yylex(void);
+ArbolSintactico * root_ast;
+bool error_sintactico = 0; 
+
 void yyerror (char const *s) {
-   cout << "Parse error:" << s << "\n"; 
+	error_sintactico = 1;
+	cout << "Parse error:" << s << "\n"; 
 }
 
 %}
@@ -49,7 +50,7 @@ void yyerror (char const *s) {
 %token READ SEND RECEIVE
 %token IF ELSE END WHILE
 %token INT BOOL CHAR
-%token AS
+%token AS ME
 
 %token <num> number
 %token <str> IDENTIFIER
@@ -147,4 +148,5 @@ exprArit	: exprArit SUMA exprArit							{$$ = new expr_aritmetica($1,$3,0);}
 			| RESTA exprArit 									{$$ = new expr_aritmetica($2,6);}
 			| number											{$$ = new numero($1);}
 			| IDENTIFIER										{$$ = new identificador($1);}
+			| ME 												{$$ = new me();}
 			;

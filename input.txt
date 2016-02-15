@@ -7,7 +7,7 @@ execute!
 	activate bombona.
 	activate bombona, bombonita.
 	collect as bombona.
-	if bar > 2:
+	if bar > me me:!!!
 		advance contador.
 		if bar > 3:
 			read.

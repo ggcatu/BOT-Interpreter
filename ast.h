@@ -295,3 +295,12 @@ class identificador : public ArbolSintactico {
 			cout << "identificador: " << valor << endl;
 		}
 };
+
+class me : public ArbolSintactico {
+	public:
+		me() {}
+		virtual void imprimir(int i) {
+			for (int j = 0; j < i; j++) cout << "	";
+			cout << "ME" << endl;
+		}
+}; 

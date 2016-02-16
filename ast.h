@@ -63,7 +63,7 @@ class intr_movimiento : public ArbolSintactico {
 					cout << "RIGTH:" << endl;
 					break;
 			}
-			down -> imprimir(i + i);
+			down -> imprimir(i + 1);
 		}
 };
 
@@ -83,7 +83,7 @@ class intr_extra : public ArbolSintactico {
 					cout << "DROP:" << endl;
 					break;
 			}
-			down -> imprimir(i + i);
+			down -> imprimir(i + 1);
 		}
 };
 
@@ -113,14 +113,14 @@ class intr_guardia : public ArbolSintactico {
 			}
 			for (int j = 0; j < i; j++) cout << "	";
 			cout << "GUARDIA: " << endl;
-				condicion -> imprimir(i + i);
+				condicion -> imprimir(i + 1);
 			for (int j = 0; j < i; j++) cout << "	";
 			cout << "CUERPO: " << endl;
-				cuerpo -> imprimir(i + i);
+				cuerpo -> imprimir(i + 1);
 			if (cuerpo_else != NULL){
 				for (int j = 0; j < i; j++) cout << "	";
 					cout << "ELSE: " << endl;
-					cuerpo_else -> imprimir(i + i);
+					cuerpo_else -> imprimir(i + 1);
 			}
 		}
 };

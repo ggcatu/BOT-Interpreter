@@ -26,9 +26,11 @@ void yyerror (char const *s) {
 %left MULT DIV MOD
 %left CONJUNCION DISYUNCION
 %right NEGACION
-%precedence DOSPUNTOS
-%precedence ELSE
-%precedence END
+%right DOSPUNTOS ELSE END
+
+// %precedence DOSPUNTOS
+// %precedence ELSE
+// %precedence END
 
 %union {	
 			int num; 

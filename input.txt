@@ -7,7 +7,10 @@ execute!
 	activate bombona.
 	activate bombona, bombonita.
 	collect as bombona.
-	if bar > me me:!!!
+	if bar > me:!!!
+	$- HOLA COMO
+	ESTAS SESTOYBIEN SEXO-$
+	$$ hola como estas
 		advance contador.
 		if bar > 3:
 			read.

@@ -1,0 +1,18 @@
+create
+	int bot bar
+		on activation:
+			store 3.
+		end
+    end
+
+    execute
+    	activate contador.
+    	$- asignar mis pelotas
+    	   son bonitas y grandes -$
+    	if bar > 2:
+    		if bar > 3:
+    			activate pepito.
+    		end
+    		advance contador.
+    	end
+    end

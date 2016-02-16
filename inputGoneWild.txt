@@ -20,6 +20,8 @@ execute
 			else
 				activate bombona.
 			end
+		else 
+			activate perritos.
 		end
 	else
 		advance bolitero.
@@ -41,7 +43,9 @@ execute
 		while j < i:
 			down 4.
 			while j < k:
+				while me :
 				left 7.
+				end
 			end
 		end
 	end

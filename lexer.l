@@ -19,7 +19,7 @@ int yycolumn = 1;
 
 "me"							return ME;
 [ ] 							{ }
-\t								{ }
+\t								{yycolumn+= 3;}
 \n								{yycolumn = 1;}
 \r 								{ }
 "true"							return TRUE;
@@ -73,8 +73,8 @@ int yycolumn = 1;
 '(.|\\n|\\t)' 					return CHARACTER;
 [0-9]+|0+						{yylval.num = atoi(yytext); return number;}
 [a-zA-Z][a-zA-Z0-9_]*			{yylval.str = yytext; return IDENTIFIER;}
-\$\$.*							return COMENTARIO;
-\$\-[^\-\$]*\-\$				return COMENTARIO;
+\$\$.*							{ }
+\$\-(\-[^$]|[^\-])*\-\$			{ }
 [0-9]+[a-zA-Z0-9]+				;
 .								{errors.push_back(new TokenError(0, yycolumn-1, yylineno, yytext));}
 

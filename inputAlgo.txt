@@ -1,17 +1,30 @@
-execute
-	advance bot0.
-	deactivate bot2.
-	activate bot1.
-	if y \/ x > true + f % 5 = y \/ (x > (true + (f % 5))): 
-		activate bombona.
-		activate bombona, bombonita.
-	end
-	if bar > 2:
-		advance contador.
-		if pokemon:
-			deactivate bombonita, bombona.
+create
+	int bot bar
+		on activation:
+			store 3.
 		end
-	else
-		advance bolitero.
 	end
-end
+
+	int bot contador
+		on default:
+			store 35.
+		end
+	end
+
+	execute
+		advance bot0.
+		deactivate bot2.
+		activate bot1.
+		if y \/ (x > true) + f % 5 = y \/ (x > (true + (f % 5))): 
+			activate bombona.
+			activate bombona, bombonita.
+		end
+		if bar > 2:
+			advance contador.
+			if pokemon:
+				deactivate bombonita, bombona.
+			end
+		else
+			advance bolitero.
+		end
+	end

@@ -8,12 +8,15 @@ using namespace std;
 #define YYDEBUG 1
 
 extern int yylex(void);
+extern int yycolumn;
+extern int yylineno;
+extern char * yytext;
 ArbolSintactico * root_ast;
 bool error_sintactico = 0; 
 
 void yyerror (char const *s) {
 	error_sintactico = 1;
-	cout << "Parse error:" << s << "\n"; 
+	cout << "Parse error:" << s << "\nFila: " << yylineno << "\n" << "Columna: " << yycolumn-1-strlen(yytext) << "\n" ; 
 }
 
 %}
@@ -60,7 +63,7 @@ void yyerror (char const *s) {
 %token <arb> arbol
 %token <boolean> TRUE FALSE
 
-%type <arb> S decl exec instr instrs lDecs declaracion tipo lComp condicion expr exprArit exprLogic exprAlt
+%type <arb> S decl exec instr instrs lDecs declaracion tipo lComp condicion expr exprArit exprLogic exprAlt instrRobot instrsRobot
 
 %%
 
@@ -76,8 +79,26 @@ declaracion : tipo BOT decl END 								{$$ = $3;}
 			| tipo BOT decl lComp END 							{$$ = $3;}
 			;
 
-lComp		: ON condicion DOSPUNTOS instrs END 				{;}
-			| lComp ON condicion DOSPUNTOS instrs END  			{;}
+lComp		: ON condicion DOSPUNTOS instrsRobot END 			{;}
+			| lComp ON condicion DOSPUNTOS instrsRobot END  	{;}
+			;
+
+instrsRobot : instrRobot 										{$$ = new instruccion($1);}
+			| instrsRobot instrRobot 							{$$ = new instruccion($1,$2);}
+			;
+
+instrRobot 	: COLLECT PUNTO										{$$ = new intr_robot(3);}
+			| COLLECT AS decl PUNTO								{$$ = new intr_robot($3, 3);}
+			| STORE expr PUNTO									{$$ = new intr_robot($2, 0);}
+			| DROP expr PUNTO									{$$ = new intr_robot($2, 1);}
+			| UP expr PUNTO										{$$ = new intr_movimiento($2,0);}
+			| DOWN expr PUNTO									{$$ = new intr_movimiento($2,1);}
+			| LEFT expr PUNTO									{$$ = new intr_movimiento($2,2);}
+			| RIGHT expr PUNTO									{$$ = new intr_movimiento($2,3);}
+			| READ PUNTO										{$$ = new intr_robot(4);}
+			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4);}
+			| SEND PUNTO										{$$ = new intr_robot(5);}
+			| RECEIVE PUNTO										{$$ = new intr_robot(6);}
 			;
 
 decl		: IDENTIFIER										{$$ = new identificador($1);}
@@ -104,24 +125,10 @@ instrs		: instr												{$$ = new instruccion($1);}
 instr		: ACTIVATE decl	PUNTO								{$$ = new intr_robot($2, 0);}
 			| DEACTIVATE decl PUNTO								{$$ = new intr_robot($2, 1);}
 			| ADVANCE decl PUNTO								{$$ = new intr_robot($2, 2);}
-			| COLLECT PUNTO										{$$ = new intr_robot(3);}
-			| COLLECT AS decl PUNTO								{$$ = new intr_robot($3, 3);}
-			| READ PUNTO										{$$ = new intr_robot(4);}
-			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4);}
-			| SEND PUNTO										{$$ = new intr_robot(5);}
-			| RECEIVE PUNTO										{$$ = new intr_robot(6);}
-
-			| STORE expr PUNTO									{$$ = new intr_robot($2, 0);}
-			| DROP expr PUNTO									{$$ = new intr_robot($2, 1);}
-
-			| UP expr PUNTO										{$$ = new intr_movimiento($2,0);}
-			| DOWN expr PUNTO									{$$ = new intr_movimiento($2,1);}
-			| LEFT expr PUNTO									{$$ = new intr_movimiento($2,2);}
-			| RIGHT expr PUNTO									{$$ = new intr_movimiento($2,3);}
-
 			| IF exprAlt DOSPUNTOS instrs END					{$$ = new intr_guardia($2,$4,0);}
 			| IF exprAlt DOSPUNTOS instrs ELSE instrs END		{$$ = new intr_guardia($2,$4,$6,1);}
 			| WHILE exprAlt DOSPUNTOS instrs END				{$$ = new intr_guardia($2,$4,2);}
+			;
 
 expr		: exprArit											{$$ = $1;}
 			| exprLogic											{$$ = $1;}

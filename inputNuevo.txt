@@ -10,8 +10,9 @@ create
     	$- asignar mis pelotas
     	   son bonitas y grandes -$
     	if bar > 2:
-    		if bar > 3:
+    		if 3 = hola:
     			activate pepito.
+                store 3.
     		end
     		advance contador.
     	end

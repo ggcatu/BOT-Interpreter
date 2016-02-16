@@ -72,7 +72,7 @@ int yycolumn = 1;
 "down"							return DOWN;
 '(.|\\n|\\t)' 					return CHARACTER;
 [0-9]+|0+						{yylval.num = atoi(yytext); return number;}
-[a-zA-Z][a-zA-Z0-9_]*			{yylval.str = yytext; return IDENTIFIER;}
+[a-zA-Z][a-zA-Z0-9_]*			{strcpy(yylval.str,yytext); return IDENTIFIER;}
 \$\$.*							{ }
 \$\-(\-[^$]|[^\-])*\-\$			{ }
 [0-9]+[a-zA-Z0-9]+				;

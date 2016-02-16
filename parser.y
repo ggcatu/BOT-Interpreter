@@ -60,7 +60,7 @@ void yyerror (char const *s) {
 %token <arb> arbol
 %token <boolean> TRUE FALSE
 
-%type <arb> S decl exec instr instrs lDecs declaracion tipo lComp condicion expr exprArit exprLogic
+%type <arb> S decl exec instr instrs lDecs declaracion tipo lComp condicion expr exprArit exprLogic exprAlt
 
 %%
 
@@ -107,7 +107,7 @@ instr		: ACTIVATE decl	PUNTO								{$$ = new intr_robot($2, 0);}
 			| COLLECT PUNTO										{$$ = new intr_robot(3);}
 			| COLLECT AS decl PUNTO								{$$ = new intr_robot($3, 3);}
 			| READ PUNTO										{$$ = new intr_robot(4);}
-			| READ "as" decl PUNTO								{$$ = new intr_robot($3, 4);}
+			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4);}
 			| SEND PUNTO										{$$ = new intr_robot(5);}
 			| RECEIVE PUNTO										{$$ = new intr_robot(6);}
 
@@ -119,13 +119,19 @@ instr		: ACTIVATE decl	PUNTO								{$$ = new intr_robot($2, 0);}
 			| LEFT expr PUNTO									{$$ = new intr_movimiento($2,2);}
 			| RIGHT expr PUNTO									{$$ = new intr_movimiento($2,3);}
 
-			| IF exprLogic DOSPUNTOS instrs END					{$$ = new intr_guardia($2,$4,0);}
-			| IF exprLogic DOSPUNTOS instrs ELSE instrs END		{$$ = new intr_guardia($2,$4,$6,1);}
-			| WHILE exprLogic DOSPUNTOS instrs END				{$$ = new intr_guardia($2,$4,2);}
+			| IF exprAlt DOSPUNTOS instrs END					{$$ = new intr_guardia($2,$4,0);}
+			| IF exprAlt DOSPUNTOS instrs ELSE instrs END		{$$ = new intr_guardia($2,$4,$6,1);}
+			| WHILE exprAlt DOSPUNTOS instrs END				{$$ = new intr_guardia($2,$4,2);}
 
 expr		: exprArit											{$$ = $1;}
 			| exprLogic											{$$ = $1;}
 			| CHARACTER											{$$ = new character($1);}
+			;
+
+exprAlt		: exprLogic											{;}
+			| IDENTIFIER										{$$ = new identificador($1);}
+			| CHARACTER											{$$ = new character($1);}
+			| ME												{$$ = new me();}
 			;
 
 exprLogic	: exprArit IGUAL exprArit							{$$ = new expr_booleana($1,$3,0);}

@@ -86,16 +86,24 @@ lComp		: ON condicion DOSPUNTOS instrsRobot END 			{;}
 instrsRobot : instrRobot 										{$$ = new instruccion($1);}
 			| instrsRobot instrRobot 							{$$ = new instruccion($1,$2);}
 			;
-
+// Chequea tipo de robot
 instrRobot 	: COLLECT PUNTO										{$$ = new intr_robot(3);}
+// Chequea doble declaracion
 			| COLLECT AS decl PUNTO								{$$ = new intr_robot($3, 3);}
+
+// Chequea tipo de robot
 			| STORE expr PUNTO									{$$ = new intr_robot($2, 0);}
 			| DROP expr PUNTO									{$$ = new intr_robot($2, 1);}
+
+
 			| UP expr PUNTO										{$$ = new intr_movimiento($2,0);}
 			| DOWN expr PUNTO									{$$ = new intr_movimiento($2,1);}
 			| LEFT expr PUNTO									{$$ = new intr_movimiento($2,2);}
 			| RIGHT expr PUNTO									{$$ = new intr_movimiento($2,3);}
+
+// Chequea tipo de robot
 			| READ PUNTO										{$$ = new intr_robot(4);}
+// Chequea doble declaracion
 			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4);}
 			| SEND PUNTO										{$$ = new intr_robot(5);}
 			| RECEIVE PUNTO										{$$ = new intr_robot(6);}
@@ -105,6 +113,7 @@ decl		: IDENTIFIER										{$$ = new identificador($1);}
 			| decl COMA IDENTIFIER 								{$$ = new instruccion($1,new identificador($3));}
 			;
 
+// Define tipo de BOT
 tipo 		: INT  												{;}
 			| BOOL 												{;}
 			| CHAR 												{;}
@@ -125,10 +134,13 @@ instrs		: instr												{$$ = new instruccion($1);}
 instr		: ACTIVATE decl	PUNTO								{$$ = new intr_robot($2, 0);}
 			| DEACTIVATE decl PUNTO								{$$ = new intr_robot($2, 1);}
 			| ADVANCE decl PUNTO								{$$ = new intr_robot($2, 2);}
+
 			| IF expr DOSPUNTOS instrs END						{$$ = new intr_guardia($2,$4,0);}
 			| IF expr DOSPUNTOS instrs ELSE instrs END			{$$ = new intr_guardia($2,$4,$6,1);}
 			| WHILE expr DOSPUNTOS instrs END					{$$ = new intr_guardia($2,$4,2);}
+			| S 												{$$ = $1;}
 			;
+
 
 expr		: expr SUMA expr									{$$ = new expr_aritmetica($1,$3,0);}
 			| expr RESTA expr		 							{$$ = new expr_aritmetica($1,$3,1);}
@@ -137,23 +149,22 @@ expr		: expr SUMA expr									{$$ = new expr_aritmetica($1,$3,0);}
 			| expr MOD expr										{$$ = new expr_aritmetica($1,$3,4);}
 			| PARABRE expr PARCIERRA							{$$ = new expr_aritmetica($2,5);}
 			| RESTA expr	 									{$$ = new expr_aritmetica($2,6);}
-			
-			| expr IGUAL expr									{$$ = new expr_booleana($1,$3,0);}
 			| expr MENOR expr									{$$ = new expr_booleana($1,$3,1);}
 			| expr MAYOR expr									{$$ = new expr_booleana($1,$3,2);}
 			| expr MENORIGUAL expr								{$$ = new expr_booleana($1,$3,3);}
 			| expr MAYORIGUAL expr								{$$ = new expr_booleana($1,$3,4);}
-			
-			//| PARABRE expr PARCIERRA							{$$ = new expr_booleana($2,5);}
-			// hay otro parAbre expr parCierra pq ahora todo es una puta expresion
+			| expr IGUAL expr									{$$ = new expr_booleana($1,$3,0);}	
 			| expr DISYUNCION expr								{$$ = new expr_booleana($1,$3,6);}
 			| expr CONJUNCION expr								{$$ = new expr_booleana($1,$3,7);}
 			| NEGACION expr										{$$ = new expr_booleana($2,8);}	
 			| TRUE												{$$ = new booleano(1);}
 			| FALSE												{$$ = new booleano(0);}			
 
+// Chequea tipo en la tabla y retorna tipo de la tabla
 			| IDENTIFIER										{$$ = new identificador($1);}
 			| CHARACTER											{$$ = new character($1);}
 			| number											{$$ = new numero($1);}
+
+// Chequea tipo en la tabla y retorna tipo de la tabla
 			| ME 												{$$ = new me();}
 			;

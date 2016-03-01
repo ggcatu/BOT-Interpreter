@@ -16,6 +16,7 @@ de las clases y funciones implementadas en definiciones.cpp
 #include <string>
 #include <vector>
 #include <stdlib.h>
+#include <stdexcept>
 #include "definiciones.h"
 #include "ast.h"
 #include "parser.tab.h"
@@ -52,9 +53,18 @@ int main(int argc, char** argv) {
 	if (!errors.empty()){
 		print_errors(errors);
 	}
-
+	
+// Imprimir AST.
 	if (!error_sintactico){
+	   try {
 		root_ast->imprimir(0);	
+		}
+		catch(int e){
+			cout << "An exception occurred. Exception Nr. " << e << '\n';
+		}
+		catch(const char* const errorMessage){
+			cout << errorMessage << endl;
+		}
 	}
 
 	return 0;

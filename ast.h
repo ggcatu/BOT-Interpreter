@@ -1,14 +1,20 @@
 #include <stdio.h>
 #include <iostream>
+#include <stdexcept>
 using namespace std;
-
+#define NUMEROS 1
+#define BOOLEANOS 2
+#define CHARACTERS 3
 
 class ArbolSintactico {
 	ArbolSintactico * first;
 	public:
+		int ident;
 		ArbolSintactico(){};
+		ArbolSintactico(int i): ident(i) {};
 		ArbolSintactico(ArbolSintactico * l): first(l) {};
-		virtual void imprimir(int i){ if(first != NULL) first->imprimir(i); }
+		virtual void imprimir(int i){ if(first != NULL) first->imprimir(i); }; 
+		virtual int get_ident(){ return ident; }
 };
 
 class raiz : public ArbolSintactico {
@@ -19,7 +25,7 @@ class raiz : public ArbolSintactico {
 		virtual void imprimir(int i){
 			if(ejecucion != NULL){
 				cout << "SECUENCIACION:" << endl;
-				ejecucion -> imprimir(1);
+				ejecucion -> imprimir(i);
 			}
 		}
 };
@@ -64,6 +70,9 @@ class intr_movimiento : public ArbolSintactico {
 					break;
 			}
 			down -> imprimir(i + 1);
+			if (down->ident != BOOLEANOS){
+				throw "Error de tipo";
+			}
 		}
 };
 
@@ -122,6 +131,9 @@ class intr_guardia : public ArbolSintactico {
 					cout << "ELSE: " << endl;
 					cuerpo_else -> imprimir(i + 1);
 			}
+			if(condicion->ident != BOOLEANOS){
+				throw "Error de tipo";
+			}
 		}
 };
 
@@ -170,8 +182,8 @@ class expr_aritmetica : public ArbolSintactico {
 		ArbolSintactico * numero_izq;
 		ArbolSintactico * numero_der;
 		inst instruccion;
-		expr_aritmetica(ArbolSintactico * i,ArbolSintactico * d, int m) : numero_izq(i), numero_der(d), instruccion(static_cast<inst>(m)) {}
-		expr_aritmetica(ArbolSintactico * d, int m) : numero_der(d), instruccion(static_cast<inst>(m)) {}
+		expr_aritmetica(ArbolSintactico * i,ArbolSintactico * d, int m) : numero_izq(i), numero_der(d), instruccion(static_cast<inst>(m)), ArbolSintactico(NUMEROS) {}
+		expr_aritmetica(ArbolSintactico * d, int m) : numero_der(d), instruccion(static_cast<inst>(m)), ArbolSintactico(NUMEROS) {}
 		virtual void imprimir(int i){
 			if (numero_izq != NULL){
 				numero_izq -> imprimir(i + 1);
@@ -202,6 +214,17 @@ class expr_aritmetica : public ArbolSintactico {
 			if (numero_der != NULL){
 				numero_der -> imprimir(i + 1);
 			}
+			if (instruccion != NEGATIVO){
+				if (numero_der->ident != NUMEROS ||
+					numero_izq->ident != NUMEROS){
+						throw "Error de tipo";
+				}
+			} else {
+				if (numero_der->ident != NUMEROS){
+					throw "Error de tipo";
+				}
+			}
+			
 		}
 };
 
@@ -211,8 +234,8 @@ class expr_booleana : public ArbolSintactico {
 		ArbolSintactico * bool_izq;
 		ArbolSintactico * bool_der;
 		inst instruccion;
-		expr_booleana(ArbolSintactico * i,ArbolSintactico * d, int m) : bool_izq(i), bool_der(d), instruccion(static_cast<inst>(m)) {}
-		expr_booleana(ArbolSintactico * d, int m) : bool_der(d), instruccion(static_cast<inst>(m)) {}
+		expr_booleana(ArbolSintactico * i,ArbolSintactico * d, int m) : bool_izq(i), bool_der(d), instruccion(static_cast<inst>(m)), ArbolSintactico(BOOLEANOS) {}
+		expr_booleana(ArbolSintactico * d, int m) : bool_der(d), instruccion(static_cast<inst>(m)), ArbolSintactico(BOOLEANOS) {}
 		virtual void imprimir(int i){
 			if (bool_izq != NULL){
 				bool_izq -> imprimir(i + 1);
@@ -251,13 +274,42 @@ class expr_booleana : public ArbolSintactico {
 			if (bool_der != NULL){
 				bool_der -> imprimir(i + 1);
 			}
+			switch(instruccion){
+				case IGUAL:
+					if (bool_der->ident != bool_izq->ident){
+						throw "Error de tipo";
+					}
+					break;
+				case MENOR:
+				case MAYOR:
+				case MENORIGUAL:
+				case MAYORIGUAL:
+					if (bool_der->ident != NUMEROS ||
+						bool_izq->ident != NUMEROS) {
+						throw "Error de tipo";
+					}
+					break;
+				case PARENTESIS:
+				case NEGACION:
+					if (bool_der->ident != BOOLEANOS){
+						throw "Error de tipo";
+					}
+					break;
+				case DISYUNCION:
+				case CONJUNCION:
+					if (bool_der->ident != BOOLEANOS ||
+						bool_izq->ident != BOOLEANOS){
+						throw "Error de tipo";
+					}
+				break;
+			}
 		}
 };
 
 class numero : public ArbolSintactico {
 	public:
 		int valor;
-		numero(int v) : valor(v) {}
+		numero(int v) : valor(v), ArbolSintactico(NUMEROS){}
 		virtual void imprimir(int i) {
 			for (int j = 0; j < i; j++) cout << "	";
 			cout << "numero: " << valor << endl;
@@ -267,7 +319,7 @@ class numero : public ArbolSintactico {
 class booleano : public ArbolSintactico {
 	public:
 		bool valor;
-		booleano(bool v) : valor(v) {}
+		booleano(bool v) : valor(v), ArbolSintactico(BOOLEANOS) {}
 		virtual void imprimir(int i) {
 			for (int j = 0; j < i; j++) cout << "	";
 			cout << "booleano: " << valor << endl;
@@ -278,7 +330,7 @@ class booleano : public ArbolSintactico {
 class character : public ArbolSintactico {
 	public:
 		char valor;
-		character(char v) : valor(v) {}
+		character(char v) : valor(v), ArbolSintactico(CHARACTERS) {}
 		virtual void imprimir(int i) {
 			for (int j = 0; j < i; j++) cout << "	";
 			cout << "character: " << valor << endl;

@@ -1,0 +1,7 @@
+execute
+	activate contador.
+	if true:
+		advance contador.
+	end
+
+end

@@ -15,7 +15,7 @@ class tabla_simbolos {
 			for(map<string, int>::const_iterator it = mapa.begin();
 			    it != mapa.end(); ++it)
 			{
-			    cout << it->first << " " << it->second << endl;
+			    cout << it->first.c_str() << " " << it->second << endl;
 			}
 		}
 };
@@ -35,7 +35,7 @@ class ArbolSintactico {
 		ArbolSintactico(ArbolSintactico * l): first(l),is_type(0) {};
 		virtual void imprimir(int i){ if(first != NULL) first->imprimir(i); }; 
 		virtual int get_ident(){ return ident; }
-		virtual void add_variable(int tipo){ return; }
+		virtual void add_variable(int tipo, bool doble){ return; }
 		virtual void check(){;}
 };
 
@@ -78,10 +78,12 @@ class instruccion : public ArbolSintactico {
 			}
 		}
 
-		virtual void add_variable(int tipo) {
-			rigth->add_variable(tipo);
+		virtual void add_variable(int tipo, bool doble) {
+			if (rigth != NULL){
+				rigth->add_variable(tipo, doble);
+			}
 			if (left != NULL){
-				left->add_variable(tipo);
+				left->add_variable(tipo, doble);
 			}
 		}
 
@@ -374,7 +376,7 @@ class on_condicion : public ArbolSintactico {
 	enum inst { ACTIVATION, DEACTIVATION, DEFAULT };
 	public:
 		inst condicion;
-		on_condicion(int v) : condicion(static_cast<inst>(v)){ add_variable(); }
+		on_condicion(int v) : condicion(static_cast<inst>(v)){ add_variable(0,0); }
 		virtual void imprimir(int i) {
 			for (int j = 0; j < i; j++) cout << "	";
 			switch(condicion){
@@ -390,7 +392,7 @@ class on_condicion : public ArbolSintactico {
 			}		
 		}
 
-		virtual void add_variable() {
+		virtual void add_variable(int i, int doble) {
 			string nombre;
 			switch(condicion){
 				case ACTIVATION:
@@ -416,6 +418,8 @@ class on_condicion : public ArbolSintactico {
 			}
 			head_table->mapa[nombre] = 0;	
 		}
+
+
 };
 
 class numero : public ArbolSintactico {
@@ -480,8 +484,7 @@ class identificador : public ArbolSintactico {
 		}
 		virtual void imprimir(int i) {
 			string ty;
-			int p = tabla->mapa[valor];
-			switch (p){
+			switch (ident){
 				case 1:
 					ty = "numero";
 				break;
@@ -493,7 +496,7 @@ class identificador : public ArbolSintactico {
 				break;
 			}
 			for (int j = 0; j < i; j++) cout << "	";
-			cout << "identificador: " << valor << " tipo: " << ty << endl;
+			cout << "identificador: " << valor.c_str() << " tipo: " << ty.c_str() << endl;
 		}
 		void check() {
 			if ( ident == 0 ) {
@@ -501,18 +504,23 @@ class identificador : public ArbolSintactico {
 				sprintf(error_strp,"%s no ha sido declarado [LINEA: %d]", c, yylineno);
 				throw error_strp;}
 		}
-		void add_variable(int tipo){
-			if (head_table->padre->mapa.count(valor) > 0) {
-				const char * c = valor.c_str();
-				sprintf(error_strp,"%s ya habia sido declarada antes. [LINEA: %d]", c, yylineno);
-				throw error_strp;
+		void add_variable(int tipo, bool doble){
+			if (doble){
+				if (head_table->padre->mapa.count(valor) > 0) {
+					const char * c = valor.c_str();
+					sprintf(error_strp,"%s ya habia sido declarada antes. [LINEA: %d]", c, yylineno);
+					throw error_strp;
+				}
+				head_table->padre->mapa[valor] = tipo;
+				head_table->mapa["me"] = tipo;
+			} else {
+				head_table->mapa[valor] = tipo;
 			}
-			head_table->mapa["me"] = tipo;
-			head_table->padre->mapa[valor] = tipo;
-			//cout << "--------------" <<endl;
-			//head_table->print();
-			//cout << "--------------" <<endl;
-			//head_table->padre->print();
+			// cout << "--------------" <<endl;
+			// head_table->print();
+			// cout << "--------------" <<endl;
+			// head_table->padre->print();
+			ident = tipo;
 			tabla = head_table;
 		}
 };
@@ -532,14 +540,18 @@ class declaracion : public ArbolSintactico {
 		ArbolSintactico * tipo;
 		ArbolSintactico * variable;
 		ArbolSintactico * comportamiento;
-		declaracion(ArbolSintactico * t, ArbolSintactico * i) : tipo(t), variable(i) {variable->add_variable(tipo->ident);}
-		declaracion(ArbolSintactico * t, ArbolSintactico * i, ArbolSintactico * c) : tipo(t), variable(i), comportamiento(c) {variable->add_variable(tipo->ident);}
+		declaracion(ArbolSintactico * t, ArbolSintactico * i) : tipo(t), variable(i) {variable->add_variable(tipo->ident,1);}
+		//declaracion(ArbolSintactico * t, ArbolSintactico * i, ArbolSintactico * c) : tipo(t), variable(i), comportamiento(c) {variable->add_variable(tipo->ident,1);}
 		virtual void imprimir(int i){
 			tipo -> imprimir(i);	
-			variable -> imprimir(i);	
+			variable -> imprimir(i);
+			for (int j = 0; j < i; j++) cout << "	";
+			cout << "ON: "<< endl;
 			if (comportamiento != NULL ) {
-				comportamiento -> imprimir(i);	
+				comportamiento -> imprimir(i+1);	
 			}
+			for (int j = 0; j < i; j++) cout << "	";
+			cout << "END" << endl;
 		}
 };
 
@@ -548,9 +560,19 @@ class inside_bot : public ArbolSintactico {
 	public:
 		ArbolSintactico * condicion;
 		ArbolSintactico * instruccion;
-		inside_bot(ArbolSintactico * t, ArbolSintactico * i) : condicion(t), instruccion(i){}
+		inside_bot(ArbolSintactico * t, ArbolSintactico * i) : condicion(t), instruccion(i){check();}
 		virtual void imprimir(int i){
+			for (int j = 0; j < i; j++) cout << "	";
+			cout << "ON" << endl;
 			condicion -> imprimir(i);	
-			instruccion -> imprimir(i+1);	
+			instruccion -> imprimir(i+1);
+			for (int j = 0; j < i; j++) cout << "	";
+			cout << "END" << endl;
+		}
+		virtual void check(){
+			if (condicion->ident != BOOLEANOS){
+				sprintf(error_strp,"Error de tipo, la condicion debe ser booleana [LINEA: %d]", yylineno);
+				throw error_strp;
+			}
 		}
 };

@@ -67,12 +67,12 @@ int main(int argc, char** argv) {
 	   try {
 		root_ast->imprimir(0);	
 		}
-		catch(int e){
-			cout << "An exception occurred. Exception Nr. " << e << '\n';
+		catch(...){
+			cout << "error";
 		}
-		catch(const char* const errorMessage){
-			cout << errorMessage << endl;
-		}
+		// catch(const char* const errorMessage){
+		// 	cout << errorMessage << endl;
+		// }
 	}
 	return 0;
 }

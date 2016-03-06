@@ -92,7 +92,7 @@ instrsRobot : instrRobot 										{$$ = new instruccion($1);}
 // Chequea tipo de robot
 instrRobot 	: COLLECT PUNTO										{$$ = new intr_robot(3);}
 // Chequea doble declaracion
-			| COLLECT AS decl PUNTO								{$$ = new intr_robot($3, 3); $3->add_variable(head_table->mapa.at("me"));}
+			| COLLECT AS decl PUNTO								{$$ = new intr_robot($3, 3); $3->add_variable(head_table->mapa.at("me"),0);}
 
 // Chequea tipo de robot
 			| STORE expr PUNTO									{$$ = new intr_robot($2, 0);}
@@ -107,7 +107,7 @@ instrRobot 	: COLLECT PUNTO										{$$ = new intr_robot(3);}
 // Chequea tipo de robot
 			| READ PUNTO										{$$ = new intr_robot(4);}
 // Chequea doble declaracion
-			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4); $3->add_variable(head_table->mapa.at("me"));}
+			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4); $3->add_variable(head_table->mapa.at("me"),0);}
 			| SEND PUNTO										{$$ = new intr_robot(5);}
 			| RECEIVE PUNTO										{$$ = new intr_robot(6);}
 			;

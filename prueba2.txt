@@ -1,13 +1,9 @@
 create
 	int bot pedro, matias
-		on me > 3:
-		send.
+		on true:
 		collect as azucar.
-		end
-		on azucar > 3:
-		send.
 		end
 	end
 execute
-	activate matias.
+	activate pedro.
 end

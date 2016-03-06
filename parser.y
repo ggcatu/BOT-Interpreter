@@ -3,6 +3,7 @@
 #include <iostream>
 #include "definiciones.h"
 #include "ast.h"
+#include <map>
 using namespace std;
 
 #define YYDEBUG 1
@@ -12,10 +13,11 @@ extern int yycolumn;
 extern int yylineno;
 extern char * yytext;
 ArbolSintactico * root_ast;
+tabla_simbolos * head_table = NULL;
+tabla_simbolos * tmp_table = NULL;
 bool error_sintactico = 0; 
-
-void yyerror (char const *s) {
-	error_sintactico = 1;
+void yyerror (char const *s) 
+{	error_sintactico = 1;
 	cout << "Parse error:" << s << "\nFila: " << yylineno << "\n" << "Columna: " << yycolumn-1-strlen(yytext) << "\n" ; 
 }
 
@@ -30,10 +32,6 @@ void yyerror (char const *s) {
 %left MULT DIV MOD
 %right NEGACION
 %right DOSPUNTOS ELSE END
-
-// %precedence DOSPUNTOS
-// %precedence ELSE
-// %precedence END
 
 %union {	
 			int num; 
@@ -63,24 +61,29 @@ void yyerror (char const *s) {
 %token <arb> arbol
 %token <boolean> TRUE FALSE
 
-%type <arb> S decl exec instr instrs lDecs declaracion tipo lComp condicion expr instrRobot instrsRobot
+%type <arb> S decl exec instr instrs lDecs declaracion tipo lComp condicion expr instrRobot instrsRobot lambda declaracionf
 
 %%
 
-S			: exec 												{$$ = new raiz($1); root_ast = new ArbolSintactico($$);}
-			| CREATE lDecs exec 								{$$ = new raiz($3); root_ast = new ArbolSintactico($$);}
+S			: lambda exec 										{$$ = new raiz($2); root_ast = new ArbolSintactico($$);}
+			| lambda CREATE lDecs exec 							{$$ = new raiz($3, $4); root_ast = new ArbolSintactico($$); if (head_table->padre != NULL) {head_table = head_table->padre;}}
+			;
+lambda		: {tmp_table = new tabla_simbolos(); tmp_table->padre = head_table; head_table = tmp_table;}
 			;
 
-lDecs 		: declaracion										{;}
-			| lDecs declaracion									{;}
+lDecs 		: declaracion										{$$ = new instruccion($1);}
+			| lDecs declaracion									{$$ = new instruccion($1,$2);}
 			;
 
-declaracion : tipo BOT decl END 								{$$ = $3;}
-			| tipo BOT decl lComp END 							{$$ = $3;}
+declaracion : declaracionf lComp END 							{$$ = $1; static_cast<declaracion *>($$)->comportamiento = $2;head_table = head_table->padre;}
+			| declaracionf END 									{$$ = $1; head_table = head_table->padre;}
 			;
 
-lComp		: ON condicion DOSPUNTOS instrsRobot END 			{;}
-			| lComp ON condicion DOSPUNTOS instrsRobot END  	{;}
+declaracionf: lambda tipo BOT decl 								{$$ = new declaracion($2,$4);}
+			;
+
+lComp		: ON condicion DOSPUNTOS instrsRobot END 			{$$ = new inside_bot($2,$4);}
+			| lComp ON condicion DOSPUNTOS instrsRobot END  	{$$ = new instruccion($1,new inside_bot($3,$5));}
 			;
 
 instrsRobot : instrRobot 										{$$ = new instruccion($1);}
@@ -89,7 +92,7 @@ instrsRobot : instrRobot 										{$$ = new instruccion($1);}
 // Chequea tipo de robot
 instrRobot 	: COLLECT PUNTO										{$$ = new intr_robot(3);}
 // Chequea doble declaracion
-			| COLLECT AS decl PUNTO								{$$ = new intr_robot($3, 3);}
+			| COLLECT AS decl PUNTO								{$$ = new intr_robot($3, 3); $3->add_variable(head_table->mapa.at("me"));}
 
 // Chequea tipo de robot
 			| STORE expr PUNTO									{$$ = new intr_robot($2, 0);}
@@ -104,7 +107,7 @@ instrRobot 	: COLLECT PUNTO										{$$ = new intr_robot(3);}
 // Chequea tipo de robot
 			| READ PUNTO										{$$ = new intr_robot(4);}
 // Chequea doble declaracion
-			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4);}
+			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4); $3->add_variable(head_table->mapa.at("me"));}
 			| SEND PUNTO										{$$ = new intr_robot(5);}
 			| RECEIVE PUNTO										{$$ = new intr_robot(6);}
 			;
@@ -113,14 +116,13 @@ decl		: IDENTIFIER										{$$ = new identificador($1);}
 			| decl COMA IDENTIFIER 								{$$ = new instruccion($1,new identificador($3));}
 			;
 
-// Define tipo de BOT
-tipo 		: INT  												{;}
-			| BOOL 												{;}
-			| CHAR 												{;}
+tipo 		: INT  												{$$ = new numero();}
+			| BOOL 												{$$ = new booleano();}
+			| CHAR 												{$$ = new character();}
 
-condicion  	: ACTIVATION										{;}
-			| DEACTIVATION										{;}
-			| DEFAULT											{;}
+condicion  	: ACTIVATION										{$$ = new on_condicion(0);}
+			| DEACTIVATION										{$$ = new on_condicion(1);}
+			| DEFAULT											{$$ = new on_condicion(2);}
 			| expr												{$$ = $1;}
 			;
 
@@ -131,9 +133,9 @@ instrs		: instr												{$$ = new instruccion($1);}
 			| instrs instr 										{$$ = new instruccion($1,$2);}
 			;
 
-instr		: ACTIVATE decl	PUNTO								{$$ = new intr_robot($2, 0);}
-			| DEACTIVATE decl PUNTO								{$$ = new intr_robot($2, 1);}
-			| ADVANCE decl PUNTO								{$$ = new intr_robot($2, 2);}
+instr		: ACTIVATE decl	PUNTO								{$$ = new intr_robot($2, 0); $2->check();}
+			| DEACTIVATE decl PUNTO								{$$ = new intr_robot($2, 1); $2->check();}
+			| ADVANCE decl PUNTO								{$$ = new intr_robot($2, 2); $2->check();}
 
 			| IF expr DOSPUNTOS instrs END						{$$ = new intr_guardia($2,$4,0);}
 			| IF expr DOSPUNTOS instrs ELSE instrs END			{$$ = new intr_guardia($2,$4,$6,1);}
@@ -159,12 +161,8 @@ expr		: expr SUMA expr									{$$ = new expr_aritmetica($1,$3,0);}
 			| NEGACION expr										{$$ = new expr_booleana($2,8);}	
 			| TRUE												{$$ = new booleano(1);}
 			| FALSE												{$$ = new booleano(0);}			
-
-// Chequea tipo en la tabla y retorna tipo de la tabla
-			| IDENTIFIER										{$$ = new identificador($1);}
+			| IDENTIFIER										{$$ = new identificador($1); $$->check();}
 			| CHARACTER											{$$ = new character($1);}
 			| number											{$$ = new numero($1);}
-
-// Chequea tipo en la tabla y retorna tipo de la tabla
-			| ME 												{$$ = new me();}
+			| ME 												{$$ = new me;}
 			;

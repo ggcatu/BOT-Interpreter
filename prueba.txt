@@ -1,7 +1,51 @@
-execute
-	activate contador.
-	if true:
-		advance contador.
+create
+	int bot pedro, matias
+		on deactivation:
+		send.
+		end
+		on default:
+		send.
+		end
+	end
+	int bot alfredo
+		on deactivation:
+		send.
+		end
+		on default:
+		send.
+		end
 	end
 
+execute
+	activate matias.
+	if matias > 5:
+		advance pedro.
+	end
+	if matias = 5:
+		activate matias.
+	end
+	create
+		int bot azul
+			on deactivation:
+			send.
+			end
+		end
+		char bot azuls
+			on deactivation:
+			send.
+			end
+		end
+	execute
+		activate azul.
+		activate matias.
+		activate pedro.
+		create
+			char bot azul, azules
+		end
+		execute
+			activate azul.
+			activate matias.
+			activate pedro.
+		end
+	end
 end

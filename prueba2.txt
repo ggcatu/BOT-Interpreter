@@ -1,0 +1,13 @@
+create
+	int bot pedro, matias
+		on me > 3:
+		send.
+		collect as azucar.
+		end
+		on azucar > 3:
+		send.
+		end
+	end
+execute
+	activate matias.
+end

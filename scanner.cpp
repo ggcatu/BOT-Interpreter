@@ -20,6 +20,7 @@ de las clases y funciones implementadas en definiciones.cpp
 #include "definiciones.h"
 #include "ast.h"
 #include "parser.tab.h"
+#include <map>
 
 using namespace std;
 
@@ -37,6 +38,7 @@ extern int yyparse();
 extern ArbolSintactico * root_ast;
 extern vector<Token *> errors;
 extern bool error_sintactico;
+extern map<string,int> bigMap;
 
 int main(int argc, char** argv) {
 
@@ -47,7 +49,13 @@ int main(int argc, char** argv) {
     }
 
 // Inicia parseo
+    try {
 	yyparse();
+	}
+	catch(const char* const errorMessage){
+			cout << errorMessage << endl;
+			return 1;
+	}
 
 // Si hay errores del lexer, imprimirlos
 	if (!errors.empty()){
@@ -66,6 +74,5 @@ int main(int argc, char** argv) {
 			cout << errorMessage << endl;
 		}
 	}
-
 	return 0;
 }

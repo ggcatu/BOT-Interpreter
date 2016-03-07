@@ -1,7 +1,12 @@
 create
 	int bot pedro, matias
 		on true:
+		up me.
 		collect as azucar.
+		end
+		on default:
+		send.
+		collect as pedro.
 		end
 	end
 execute

@@ -6,6 +6,7 @@ using namespace std;
 #define NUMEROS 1
 #define BOOLEANOS 2
 #define CHARACTERS 3
+#define CONDICION 4
 class tabla_simbolos {
 	public:
 		map<string,int> mapa;
@@ -121,7 +122,7 @@ class intr_movimiento : public ArbolSintactico {
 			down -> imprimir(i + 1);
 		}
 		virtual void check(){
-			if (down->ident != BOOLEANOS){
+			if (down->ident != NUMEROS){
 				sprintf(error_strp,"Error de tipo, se esperaba un booleano [LINEA: %d]", yylineno);
 				throw error_strp;
 			}
@@ -376,7 +377,7 @@ class on_condicion : public ArbolSintactico {
 	enum inst { ACTIVATION, DEACTIVATION, DEFAULT };
 	public:
 		inst condicion;
-		on_condicion(int v) : condicion(static_cast<inst>(v)){ add_variable(0,0); }
+		on_condicion(int v) :  ArbolSintactico(CONDICION), condicion(static_cast<inst>(v)){ add_variable(0,0); }
 		virtual void imprimir(int i) {
 			for (int j = 0; j < i; j++) cout << "	";
 			switch(condicion){
@@ -467,20 +468,27 @@ class identificador : public ArbolSintactico {
 	public:
 		string valor;
 		tabla_simbolos * tabla;
-		identificador(string v) : valor(v) { 
-			tabla_simbolos * rtmp;
-			rtmp = head_table;
-			int i =0;
-			while (head_table != NULL){ 
+		identificador(string v) : valor(v) {
+			if (head_table->mapa.count("me") > 0 ){
 				if (head_table->mapa.count(v) > 0){
 					ident = head_table->mapa.at(v);
-					tabla = head_table;
-					break; 
-				} 
-				head_table = head_table->padre;
-				i++;
-			}
-			head_table = rtmp;
+				} else {
+					ident = 0;
+				}
+				tabla = head_table;
+			} else {
+				tabla_simbolos * rtmp;
+				rtmp = head_table;
+				while (head_table != NULL){ 
+					if (head_table->mapa.count(v) > 0){
+						ident = head_table->mapa.at(v);
+						tabla = head_table;
+						break; 
+					} 
+					head_table = head_table->padre;
+				}
+				head_table = rtmp;
+			}	
 		}
 		virtual void imprimir(int i) {
 			string ty;
@@ -570,7 +578,7 @@ class inside_bot : public ArbolSintactico {
 			cout << "END" << endl;
 		}
 		virtual void check(){
-			if (condicion->ident != BOOLEANOS){
+			if (condicion->ident != BOOLEANOS && condicion->ident != CONDICION){
 				sprintf(error_strp,"Error de tipo, la condicion debe ser booleana [LINEA: %d]", yylineno);
 				throw error_strp;
 			}

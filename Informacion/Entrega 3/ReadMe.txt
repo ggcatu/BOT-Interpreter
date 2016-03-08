@@ -23,3 +23,6 @@ Aparte de que se verificaran las condiciones implicitas de las funciones ( Expre
 
 Básicamente solo se modificó el archivo ast.h para incluir la definicion de la clase tabla de símbolos, que nos permite la jerarquización de las tablas
 de simbolos, y la inclusión de los métodos de chequeo de tipos que se implementan en las diferentes clases.
+
+Como se indica en el enunciado, el proyecto funciona correctamente en las computadoras del LDC (Linux), pero se detectaron problemas al correrlos
+en Windows.

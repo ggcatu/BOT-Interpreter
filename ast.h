@@ -1,3 +1,15 @@
+/*
+Traductores e Interpretadores (CI-3725)
+
+Autores:
+Guillermo Betancourt, carnet 11-10103
+Gabriel Giménez, carnet 12-11006
+
+ast.h:
+Contiene la definicion del arbol sintactico asi como la de la tabla de simbolos utilizadas
+en el proyecto
+*/
+
 #include <stdio.h>
 #include <iostream>
 #include <stdexcept>
@@ -7,6 +19,12 @@ using namespace std;
 #define BOOLEANOS 2
 #define CHARACTERS 3
 #define CONDICION 4
+
+/* Clase tabla de simbolos, implementada con una tabla de hash
+	y un apuntador a su padre, para poder tener la estructura 
+	jerarquica requerida para el proyecto
+*/
+
 class tabla_simbolos {
 	public:
 		map<string,int> mapa;
@@ -21,9 +39,15 @@ class tabla_simbolos {
 		}
 };
 
+/* Definiciones externas (parser.y)
+	que permiten compartir el codigo.
+*/
+
 extern tabla_simbolos * head_table;
 extern int yylineno;
 extern char error_strp[1000];
+
+/* Definicion de la clase base ArbolSintactico */
 
 class ArbolSintactico {
 	ArbolSintactico * first;
@@ -39,6 +63,8 @@ class ArbolSintactico {
 		virtual void add_variable(int tipo, bool doble){ return; }
 		virtual void check(){;}
 };
+
+/* Definicion de la clase raiz */
 
 class raiz : public ArbolSintactico {
 	public:
@@ -63,6 +89,9 @@ class raiz : public ArbolSintactico {
 			}
 		}
 };
+
+/* Definicion de la clase instruccion
+	es utilizada para generar una lista de instrucciones */
 
 class instruccion : public ArbolSintactico {
 	public:
@@ -96,6 +125,7 @@ class instruccion : public ArbolSintactico {
 		}
 };
 
+/* Definicion de la clase nodo de movimientos */
 
 class intr_movimiento : public ArbolSintactico {
 		enum mov { UP, DOWN, LEFT, RIGTH };
@@ -121,6 +151,8 @@ class intr_movimiento : public ArbolSintactico {
 			}
 			down -> imprimir(i + 1);
 		}
+		/* Chequea que la expresion recibida sea un entero
+			Se debera luego chequear que sea mayor a 0 */
 		virtual void check(){
 			if (down->ident != NUMEROS){
 				sprintf(error_strp,"Error de tipo, se esperaba un booleano [LINEA: %d]", yylineno);
@@ -128,6 +160,9 @@ class intr_movimiento : public ArbolSintactico {
 			}
 		}
 };
+
+/* Definicion de la clase que engloba instrucciones que 
+	calificamos como "extra" */
 
 class intr_extra : public ArbolSintactico {
 		enum mov { STORE, DROP };
@@ -148,6 +183,9 @@ class intr_extra : public ArbolSintactico {
 			down -> imprimir(i + 1);
 		}
 };
+
+/* Definicion de la clase guardia, contiene instrucciones
+	que requieren la evaluacion de una condicion */
 
 class intr_guardia : public ArbolSintactico {
 		enum inst { IF, IF_ELSE, WHILE };
@@ -185,7 +223,7 @@ class intr_guardia : public ArbolSintactico {
 					cuerpo_else -> imprimir(i + 1);
 			}
 		}
-
+		/* Se verifica que la condicion sea del tipo BOOLEANA */
 		virtual void check(){
 			if(condicion->ident != BOOLEANOS){
 				sprintf(error_strp,"Error de tipo, se esperaba un booleano [LINEA: %d]", yylineno);
@@ -194,6 +232,7 @@ class intr_guardia : public ArbolSintactico {
 		}
 };
 
+/* Definicion de la clase que engloba las instrucciones del robot */
 
 class intr_robot : public ArbolSintactico {
 		enum inst { T_ACTIVATE, T_DEACTIVATE, T_ADVANCE, T_COLLECT, T_READ, SEND, RECEIVE };
@@ -232,7 +271,7 @@ class intr_robot : public ArbolSintactico {
 			}
 		}
 };
-
+/* Definicion de la clase que engloba las expresiones aritmeticas y devuelven un numero */
 class expr_aritmetica : public ArbolSintactico {
 		enum inst { SUMA, RESTA, MULT, DIV, MOD, PARENTESIS, NEGATIVO};
 	public:
@@ -272,6 +311,7 @@ class expr_aritmetica : public ArbolSintactico {
 				numero_der -> imprimir(i + 1);
 			}
 		}
+		/* Se chequea que este bien compuesta la expresion, chequeando si son numeros */
 		virtual void check(){
 			if (instruccion != NEGATIVO){
 				if (numero_der->ident != NUMEROS ||
@@ -287,7 +327,7 @@ class expr_aritmetica : public ArbolSintactico {
 			}
 		}
 };
-
+/* Definicion de la clase que engloba las expresiones booleanas y devuelven un booleano */
 class expr_booleana : public ArbolSintactico {
 		enum inst { IGUAL, MENOR, MAYOR, MENORIGUAL, MAYORIGUAL, PARENTESIS, DISYUNCION, CONJUNCION, NEGACION};
 	public:
@@ -335,6 +375,7 @@ class expr_booleana : public ArbolSintactico {
 				bool_der -> imprimir(i + 1);
 			}
 		}
+		/* Se chequea que este bien compuesta la expresion. */
 		virtual void check(){
 				switch(instruccion){
 				case IGUAL:
@@ -372,27 +413,33 @@ class expr_booleana : public ArbolSintactico {
 		}
 };
 
-
+/* Definicion de la clase que engloba las condiciones de los comportamientos del robot*/
 class on_condicion : public ArbolSintactico {
-	enum inst { ACTIVATION, DEACTIVATION, DEFAULT };
+	enum inst { ACTIVATION, DEACTIVATION, DEFAULT, EXPR};
 	public:
 		inst condicion;
+		ArbolSintactico * expr;
 		on_condicion(int v) :  ArbolSintactico(CONDICION), condicion(static_cast<inst>(v)){ add_variable(0,0); }
+		on_condicion(int v, ArbolSintactico * l) : expr(l), ArbolSintactico(CONDICION), condicion(static_cast<inst>(v)){check();}
 		virtual void imprimir(int i) {
 			for (int j = 0; j < i; j++) cout << "	";
 			switch(condicion){
 				case ACTIVATION:
-				cout << "ON ACTIVATION: " << endl;
+				cout << "ACTIVATION: " << endl;
 				break;
 				case DEACTIVATION:
-				cout << "ON DEACTIVATION: " << endl;
+				cout << "DEACTIVATION: " << endl;
 				break;
 				case DEFAULT:
-				cout << "ON DEFAULT: " << endl;
+				cout << "DEFAULT: " << endl;
+				break;
+				case EXPR:
+				cout << "EXPRESION: " << endl;
+				expr->imprimir(i);
 				break;
 			}		
 		}
-
+		/* Permite llevar un control del numero de Activation, Deactivation, Default declarados.*/
 		virtual void add_variable(int i, int doble) {
 			string nombre;
 			switch(condicion){
@@ -412,17 +459,22 @@ class on_condicion : public ArbolSintactico {
 				throw error_strp;
 			}
 			if (condicion == ACTIVATION || condicion == DEACTIVATION){
-				if (head_table->mapa.count("default") > 0) {
-					sprintf(error_strp,"default debe ser el ultimo comportamiento. [LINEA: %d]", yylineno);
-					throw error_strp;
-				}
+				check();
 			}
 			head_table->mapa[nombre] = 0;	
 		}
 
+		/* Verifica que el ultimo comportamiento sea el default */
+		virtual void check(){
+			if (head_table->mapa.count("default") > 0) {
+					sprintf(error_strp,"default debe ser el ultimo comportamiento. [LINEA: %d]", yylineno);
+					throw error_strp;
+			}
+		}
+
 
 };
-
+/* Definicion de la clase numero */
 class numero : public ArbolSintactico {
 	public:
 		int valor;
@@ -435,7 +487,7 @@ class numero : public ArbolSintactico {
 			}
 		}
 };
-
+/* Definicion de la clase booleano */
 class booleano : public ArbolSintactico {
 	public:
 		bool valor;
@@ -449,7 +501,7 @@ class booleano : public ArbolSintactico {
 		}
 };
 
-
+/* Definicion de la clase caracter */
 class character : public ArbolSintactico {
 	public:
 		char valor;
@@ -463,11 +515,12 @@ class character : public ArbolSintactico {
 		}
 };
 
-
+/* Definicion de la clase identificador */
 class identificador : public ArbolSintactico {
 	public:
 		string valor;
 		tabla_simbolos * tabla;
+		/* Chequea si es una variable solo local o tiene mayor alcance */
 		identificador(string v) : valor(v) {
 			if (head_table->mapa.count("me") > 0 ){
 				if (head_table->mapa.count(v) > 0){
@@ -506,12 +559,15 @@ class identificador : public ArbolSintactico {
 			for (int j = 0; j < i; j++) cout << "	";
 			cout << "identificador: " << valor.c_str() << " tipo: " << ty.c_str() << endl;
 		}
+
+		/* Se verifica que la variabla este declarada en el contexto y su alcance */
 		void check() {
 			if ( ident == 0 ) {
 				const char * c = valor.c_str();
 				sprintf(error_strp,"%s no ha sido declarado [LINEA: %d]", c, yylineno);
 				throw error_strp;}
 		}
+		/* Se agrega la variable a las tablas de simbolos correspondientes */
 		void add_variable(int tipo, bool doble){
 			if (doble){
 				if (head_table->padre->mapa.count(valor) > 0) {
@@ -522,17 +578,19 @@ class identificador : public ArbolSintactico {
 				head_table->padre->mapa[valor] = tipo;
 				head_table->mapa["me"] = tipo;
 			} else {
+				if (head_table->mapa.count(valor) > 0) {
+					const char * c = valor.c_str();
+					sprintf(error_strp,"%s ya habia sido declarada antes. [LINEA: %d]", c, yylineno);
+					throw error_strp;
+				}
 				head_table->mapa[valor] = tipo;
 			}
-			// cout << "--------------" <<endl;
-			// head_table->print();
-			// cout << "--------------" <<endl;
-			// head_table->padre->print();
 			ident = tipo;
 			tabla = head_table;
 		}
 };
 
+/* Definicion de la clase me */
 class me : public ArbolSintactico {
 	public:
 		me() {ident = head_table->mapa.at("me");}
@@ -542,28 +600,23 @@ class me : public ArbolSintactico {
 		}
 }; 
 
-
+/* Definicion de la clase declaracion */
 class declaracion : public ArbolSintactico {
 	public:
 		ArbolSintactico * tipo;
 		ArbolSintactico * variable;
 		ArbolSintactico * comportamiento;
 		declaracion(ArbolSintactico * t, ArbolSintactico * i) : tipo(t), variable(i) {variable->add_variable(tipo->ident,1);}
-		//declaracion(ArbolSintactico * t, ArbolSintactico * i, ArbolSintactico * c) : tipo(t), variable(i), comportamiento(c) {variable->add_variable(tipo->ident,1);}
 		virtual void imprimir(int i){
 			tipo -> imprimir(i);	
 			variable -> imprimir(i);
-			for (int j = 0; j < i; j++) cout << "	";
-			cout << "ON: "<< endl;
 			if (comportamiento != NULL ) {
 				comportamiento -> imprimir(i+1);	
 			}
-			for (int j = 0; j < i; j++) cout << "	";
-			cout << "END" << endl;
 		}
 };
 
-
+/* Definicion de la clase que engloba los comportamientos de los bots */
 class inside_bot : public ArbolSintactico {
 	public:
 		ArbolSintactico * condicion;
@@ -578,6 +631,7 @@ class inside_bot : public ArbolSintactico {
 			cout << "END" << endl;
 		}
 		virtual void check(){
+			/* Chequea que la condicion sea valida, o expr, o default o activation o deactivation*/
 			if (condicion->ident != BOOLEANOS && condicion->ident != CONDICION){
 				sprintf(error_strp,"Error de tipo, la condicion debe ser booleana [LINEA: %d]", yylineno);
 				throw error_strp;

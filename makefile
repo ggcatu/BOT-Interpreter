@@ -1,5 +1,5 @@
-SintBot: scanner.o lex.yy.c parser.tab.h definiciones.o ast.h ast.cpp
-	g++ scanner.o definiciones.o lex.yy.c parser.tab.c ast.cpp -o SintBot
+ContBot: scanner.o lex.yy.c parser.tab.h definiciones.o ast.h ast.cpp
+	g++ scanner.o definiciones.o lex.yy.c parser.tab.c ast.cpp -o ContBot
 
 scanner.o: scanner.cpp parser.tab.h
 	g++ -c scanner.cpp definiciones.cpp

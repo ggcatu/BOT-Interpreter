@@ -1,14 +1,39 @@
 create
 	int bot pedro, matias
-		on true:
-		up me.
-		collect as azucar.
-		end
 		on default:
 		send.
-		collect as pedro.
+		collect as meria.
+		end
+	end
+	char bot pedros
+		on default:
+		send.
+		collect as meria.
 		end
 	end
 execute
 	activate pedro.
-end
+	activate matias.
+	activate pedros.
+	create
+		char bot pedro, matias
+			on default:
+			send.
+			collect as meria.
+			end
+		end
+		int bot pedros
+			on default:
+			send.
+			collect as meria.
+			end
+		end
+	execute
+		if 3 + 2 < 5:
+		activate pedro.
+		end
+		activate matias.
+		activate pedros.
+	end
+
+end

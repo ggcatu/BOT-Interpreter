@@ -123,7 +123,7 @@ tipo 		: INT  												{$$ = new numero();}
 condicion  	: ACTIVATION										{$$ = new on_condicion(0);}
 			| DEACTIVATION										{$$ = new on_condicion(1);}
 			| DEFAULT											{$$ = new on_condicion(2);}
-			| expr												{$$ = $1;}
+			| expr												{$$ = new on_condicion(3,$1);}
 			;
 
 exec		: EXECUTE instrs END								{$$ = $2;}

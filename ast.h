@@ -14,11 +14,111 @@ en el proyecto
 #include <iostream>
 #include <stdexcept>
 #include <map>
+#include <vector>
 using namespace std;
 #define NUMEROS 1
 #define BOOLEANOS 2
 #define CHARACTERS 3
 #define CONDICION 4
+
+extern int yyparse();
+/* Definicion de la clase base ArbolSintactico */
+
+class ArbolSintactico {
+	ArbolSintactico * first;
+	public:
+		int ident;
+		int linea;
+		bool is_type;
+		ArbolSintactico(): is_type(0){};
+		ArbolSintactico(int i): ident(i),is_type(0) {};
+		ArbolSintactico(ArbolSintactico * l): first(l),is_type(0) {};
+		virtual void imprimir(int i){ if(first != NULL) first->imprimir(i); }; 
+		virtual int get_ident(){ return ident; }
+		virtual void add_variable(int tipo, bool doble){ return; }
+		virtual void check(){;}
+		virtual void ejecutar(){if(first != NULL) first->ejecutar();}
+		virtual int * get_value(){;}
+		virtual bool * get_bool(){;}
+		virtual void activate(){;}
+		virtual void deactivate(){;}
+		virtual void add_comportamiento(ArbolSintactico * comp){;}
+};
+
+/* Definicion de la clase numero */
+class numero : public ArbolSintactico {
+	public:
+		int valor;
+		numero(): ArbolSintactico(NUMEROS) {is_type = 1;}
+		numero(int v) : valor(v), ArbolSintactico(NUMEROS){}
+		virtual void imprimir(int i) {
+			if (!is_type){
+				for (int j = 0; j < i; j++) cout << "	";
+				cout << "numero: " << valor << endl;
+			}
+		}
+		virtual int * get_value(){
+			return &valor;
+		}
+};
+/* Definicion de la clase booleano */
+class booleano : public ArbolSintactico {
+	public:
+		bool valor;
+		booleano(): ArbolSintactico(BOOLEANOS) {is_type = 1;}
+		booleano(bool v) : valor(v), ArbolSintactico(BOOLEANOS) {}
+		virtual void imprimir(int i) {
+			if (!is_type){
+				for (int j = 0; j < i; j++) cout << "	";
+				cout << "booleano: " << valor << endl;
+			}
+		}
+		virtual bool * get_bool(){
+			return &valor;
+		}
+};
+
+/* Definicion de la clase caracter */
+class character : public ArbolSintactico {
+	public:
+		char valor;
+		character() : ArbolSintactico(CHARACTERS) {is_type = 1;}
+		character(char v) : valor(v), ArbolSintactico(CHARACTERS) {}
+		virtual void imprimir(int i) {
+			if (!is_type){
+				for (int j = 0; j < i; j++) cout << "	";
+				cout << "character: " << valor << endl;
+			}
+		}
+};
+
+
+class variable { 
+	public: 
+		int tipo;
+		bool init;
+		variable(int ty): tipo(ty), init(false){};
+};
+
+class variable_int: public variable {
+	public:
+		int * valor;
+		variable_int(int ty): variable(ty) {
+			valor = new int(0);
+		};
+};
+
+class variable_bool: public variable {
+	public:
+		bool * valor;
+		variable_bool(int ty): variable(ty) {};
+};
+
+class variable_char: public variable {
+	public:
+		char * valor;
+		variable_char(int ty): variable(ty) {};
+};
 
 /* Clase tabla de simbolos, implementada con una tabla de hash
 	y un apuntador a su padre, para poder tener la estructura 
@@ -28,6 +128,7 @@ using namespace std;
 class tabla_simbolos {
 	public:
 		map<string,int> mapa;
+		map<string,variable *> valores;
 		tabla_simbolos * padre;
 		tabla_simbolos(){padre = NULL;};
 		void print() { 
@@ -47,23 +148,59 @@ extern tabla_simbolos * head_table;
 extern int yylineno;
 extern char error_strp[1000];
 
-/* Definicion de la clase base ArbolSintactico */
+/* Definicion de robot
+*/
 
-class ArbolSintactico {
-	ArbolSintactico * first;
+class Robot {
 	public:
-		int ident;
-		int linea;
-		bool is_type;
-		ArbolSintactico(): is_type(0){};
-		ArbolSintactico(int i): ident(i),is_type(0) {};
-		ArbolSintactico(ArbolSintactico * l): first(l),is_type(0) {};
-		virtual void imprimir(int i){ if(first != NULL) first->imprimir(i); }; 
-		virtual int get_ident(){ return ident; }
-		virtual void add_variable(int tipo, bool doble){ return; }
-		virtual void check(){;}
+		int tipo;
+		ArbolSintactico * valor;
+		ArbolSintactico * comportamientos;
+		bool init;
+		bool activated;
+		tabla_simbolos * tabla;
+	Robot(int ty, tabla_simbolos * head){
+		tipo = ty;
+		tabla = head;
+		activated = false;
+		init = false;
+		comportamientos = NULL;
+	}
+
+	void activate(){
+		if (!activated){
+			tabla_simbolos * tmp = head_table;
+			head_table = tabla;
+			activated = true;
+			if (comportamientos != NULL) {
+				comportamientos -> activate();
+			} else {
+				cout << "ERROR COMPORTAMIENTO NULO" << endl;
+			}
+			head_table = tmp;
+		} else {
+			cout << "ERROR ESTAS ACTIVANDO 2 VECES" << endl;
+		}
+	}
+
+	void deactivate(){
+		if (activated){
+			tabla_simbolos * tmp = head_table;
+			head_table = tabla;
+			activated = false;
+			if (comportamientos != NULL) {
+				comportamientos ->ejecutar();
+			} else {
+				cout << "ERROR COMPORTAMIENTO NULO" << endl;
+			}
+			head_table = tmp;
+		} else {
+			cout << "ERROR ESTAS DESACTIVANDO DESACTIVADO" << endl;
+		}
+	}
 };
 
+extern map<string,Robot *> robots;
 /* Definicion de la clase raiz */
 
 class raiz : public ArbolSintactico {
@@ -87,6 +224,9 @@ class raiz : public ArbolSintactico {
 				cout << "SECUENCIACION:" << endl;
 				ejecucion -> imprimir(i+1);
 			}
+		}
+		virtual void ejecutar(){
+			ejecucion -> ejecutar();
 		}
 };
 
@@ -122,6 +262,34 @@ class instruccion : public ArbolSintactico {
 			if (left != NULL){
 				left->check();
 			}
+		}
+
+		virtual void ejecutar(){
+			if (left != NULL){
+				left->ejecutar();
+			}
+			rigth->ejecutar();
+		}
+
+		virtual void activate(){
+			if (left != NULL){
+				left->activate();
+			}
+			rigth->activate();
+		}
+
+		virtual void deactivate(){
+			if (left != NULL){
+				left->deactivate();
+			}
+			rigth->deactivate();
+		}
+
+		virtual void add_comportamiento(ArbolSintactico * comp){
+			if (left != NULL){
+				left->add_comportamiento(comp);
+			}
+			rigth->add_comportamiento(comp);
 		}
 };
 
@@ -161,28 +329,7 @@ class intr_movimiento : public ArbolSintactico {
 		}
 };
 
-/* Definicion de la clase que engloba instrucciones que 
-	calificamos como "extra" */
 
-class intr_extra : public ArbolSintactico {
-		enum mov { STORE, DROP };
-	public:
-		ArbolSintactico * down;
-		mov movimiento;
-		intr_extra(ArbolSintactico * l, int m) : down(l), movimiento(static_cast<mov>(m)) {}
-		virtual void imprimir(int i){
-			for (int j = 0; j < i; j++) cout << "	";
-			switch(movimiento)
-{				case STORE:
-					cout << "STORE:" << endl;
-					break;
-				case DROP:
-					cout << "DROP:" << endl;
-					break;
-			}
-			down -> imprimir(i + 1);
-		}
-};
 
 /* Definicion de la clase guardia, contiene instrucciones
 	que requieren la evaluacion de una condicion */
@@ -232,48 +379,10 @@ class intr_guardia : public ArbolSintactico {
 		}
 };
 
-/* Definicion de la clase que engloba las instrucciones del robot */
 
-class intr_robot : public ArbolSintactico {
-		enum inst { T_ACTIVATE, T_DEACTIVATE, T_ADVANCE, T_COLLECT, T_READ, SEND, RECEIVE };
-	public:
-		ArbolSintactico * declaraciones;
-		inst instruccion;
-		intr_robot(ArbolSintactico * l, int m) : declaraciones(l), instruccion(static_cast<inst>(m)) {}
-		intr_robot(int m) : instruccion(static_cast<inst>(m)) {}
-		virtual void imprimir(int i){
-			for (int j = 0; j < i; j++) cout << "	";
-			switch(instruccion){
-				case T_ACTIVATE:
-					cout << "ACTIVATE:" << endl;
-					break;
-				case T_DEACTIVATE:
-					cout << "DEACTIVATE:" << endl;
-					break;
-				case T_ADVANCE:
-					cout << "ADVANCE:" << endl;
-					break;
-				case T_COLLECT:
-					cout << "COLLECT:" << endl;
-					break;
-				case T_READ:
-					cout << "READ:" << endl;
-					break;
-				case SEND:
-					cout << "SEND." << endl;
-					break;
-				case RECEIVE:
-					cout << "RECEIVE:" << endl;
-					break;
-			}
-			if (declaraciones != NULL){
-				declaraciones -> imprimir(i + 1);
-			}
-		}
-};
 /* Definicion de la clase que engloba las expresiones aritmeticas y devuelven un numero */
 class expr_aritmetica : public ArbolSintactico {
-		enum inst { SUMA, RESTA, MULT, DIV, MOD, PARENTESIS, NEGATIVO};
+		enum inst { SUMA, RESTA, MULT, DIV, MOD, PARENTESIS, NEGATIVO, NUMERO};
 	public:
 		ArbolSintactico * numero_izq;
 		ArbolSintactico * numero_der;
@@ -306,6 +415,10 @@ class expr_aritmetica : public ArbolSintactico {
 					break;
 				case NEGATIVO:
 					cout << "NEGATIVO: " << endl;
+					break;
+				case NUMERO:
+					cout << "NUMERO: " << endl;
+					break;
 			}
 			if (numero_der != NULL){
 				numero_der -> imprimir(i + 1);
@@ -313,23 +426,107 @@ class expr_aritmetica : public ArbolSintactico {
 		}
 		/* Se chequea que este bien compuesta la expresion, chequeando si son numeros */
 		virtual void check(){
-			if (instruccion != NEGATIVO){
+			if (instruccion == PARENTESIS){
+				ident = numero_der->ident;
+			}
+			if (instruccion != NEGATIVO && instruccion != NUMERO && instruccion != PARENTESIS){
 				if (numero_der->ident != NUMEROS ||
 					numero_izq->ident != NUMEROS){
 					sprintf(error_strp,"Error de tipo, se esperaban dos int [LINEA: %d]", yylineno);
 						throw error_strp;
 				}
 			} else {
-				if (numero_der->ident != NUMEROS){
+				if (numero_der->ident != NUMEROS && instruccion != PARENTESIS){
 					sprintf(error_strp,"Error de tipo, se esperaba un int [LINEA: %d]", yylineno);
 					throw error_strp;
 				}
 			}
 		}
+
+		virtual int * get_value(){
+			switch(instruccion){
+				case SUMA:
+					return new int(*numero_der->get_value() + *numero_izq->get_value());
+				case RESTA:
+					return new int(*numero_izq->get_value() - *numero_der->get_value());
+				case MULT:
+					return new int(*numero_der->get_value() * *numero_izq->get_value());
+				case DIV:
+					if(*numero_der->get_value() == 0) { cout << "ERROR DE DIVISION POR CERO";}
+					return new int(*numero_izq->get_value() / *numero_der->get_value());
+				case MOD:
+					return new int(*numero_der->get_value() % *numero_izq->get_value());
+				case PARENTESIS:
+					return numero_der->get_value();
+				case NEGATIVO:
+					return new int(-*numero_der->get_value());
+				case NUMERO:
+					return numero_der->get_value();
+			}
+		}
+
+		virtual bool * get_bool(){
+			return numero_der->get_bool();
+		}
 };
+
+/* Definicion de la clase que engloba instrucciones que 
+	calificamos como "extra" */
+
+class intr_extra : public ArbolSintactico {
+		enum mov { STORE, DROP };
+	public:
+		ArbolSintactico * down;
+		mov movimiento;
+		intr_extra(ArbolSintactico * l, int m) : down(l), movimiento(static_cast<mov>(m)) {}
+		virtual void imprimir(int i){
+			for (int j = 0; j < i; j++) cout << "	";
+			switch(movimiento) {	
+				case STORE:
+					cout << "STORE:" << endl;
+					break;
+				case DROP:
+					cout << "DROP:" << endl;
+					break;
+			}
+			down -> imprimir(i + 1);
+		}
+		virtual void ejecutar(){
+			switch(head_table->valores["me"]->tipo){
+				case NUMEROS: {
+					if (down -> ident != NUMEROS){
+						cout << "ERROR DE TIPO" << endl;
+					} else {
+						head_table->valores["me"]->init = true; 
+						static_cast<variable_int * >(head_table->valores["me"])->valor = static_cast<expr_aritmetica *>(down)->get_value(); 
+					}
+					break;
+				}
+				case CHARACTERS: {
+					if (down -> ident != CHARACTERS){
+						cout << "ERROR DE TIPO" << endl;
+					} else {
+						head_table->valores["me"]->init = true; 
+						static_cast<variable_char * >(head_table->valores["me"])->valor = &static_cast<character *>(down)->valor; 
+					}
+					break;
+				}
+				case BOOLEANOS: {
+					if (down -> ident != BOOLEANOS){
+						cout << "ERROR DE TIPO" << endl;
+					} else {
+						head_table->valores["me"]->init = true; 
+						static_cast<variable_bool * >(head_table->valores["me"])->valor = static_cast<booleano *>(down)->get_bool(); 
+					}
+					break;
+				}
+			}
+		}
+};
+
 /* Definicion de la clase que engloba las expresiones booleanas y devuelven un booleano */
 class expr_booleana : public ArbolSintactico {
-		enum inst { IGUAL, MENOR, MAYOR, MENORIGUAL, MAYORIGUAL, PARENTESIS, DISYUNCION, CONJUNCION, NEGACION};
+		enum inst { IGUAL, MENOR, MAYOR, MENORIGUAL, MAYORIGUAL, PARENTESIS, DISYUNCION, CONJUNCION, NEGACION, CONSTANTE};
 	public:
 		ArbolSintactico * bool_izq;
 		ArbolSintactico * bool_der;
@@ -369,7 +566,9 @@ class expr_booleana : public ArbolSintactico {
 				case NEGACION:
 					cout << "NEGACION:" << endl;
 					break;
-
+				case CONSTANTE:
+					cout << "COSTANTE:" << endl;
+					break;
 			}
 			if (bool_der != NULL){
 				bool_der -> imprimir(i + 1);
@@ -411,12 +610,37 @@ class expr_booleana : public ArbolSintactico {
 				break;
 			}
 		}
+
+		virtual bool * get_bool(){
+			switch(instruccion){
+				case IGUAL:
+					return new bool(*bool_izq->get_value() == *bool_der->get_value());
+				case MENOR:
+					return new bool(*bool_izq->get_value() < *bool_der->get_value());
+				case MAYOR:
+					return new bool(*bool_izq->get_value() > *bool_der->get_value());
+				case MENORIGUAL:
+					return new bool(*bool_izq->get_value() <= *bool_der->get_value());
+				case MAYORIGUAL:
+					return new bool(*bool_izq->get_value() >= *bool_der->get_value());
+				case PARENTESIS:
+					return bool_der->get_bool();
+				case DISYUNCION:
+					return new bool(*bool_der->get_bool() || *bool_izq->get_bool() );
+				case CONJUNCION:
+					return new bool(*bool_der->get_bool() && *bool_izq->get_bool() );
+				case NEGACION:
+					return new bool(!*bool_der->get_bool());
+				case CONSTANTE:
+					return bool_der->get_bool();
+			}
+		}
 };
 
 /* Definicion de la clase que engloba las condiciones de los comportamientos del robot*/
 class on_condicion : public ArbolSintactico {
-	enum inst { ACTIVATION, DEACTIVATION, DEFAULT, EXPR};
 	public:
+		enum inst { ACTIVATION, DEACTIVATION, DEFAULT, EXPR};
 		inst condicion;
 		ArbolSintactico * expr;
 		on_condicion(int v) :  ArbolSintactico(CONDICION), condicion(static_cast<inst>(v)){ add_variable(0,0); }
@@ -474,46 +698,6 @@ class on_condicion : public ArbolSintactico {
 
 
 };
-/* Definicion de la clase numero */
-class numero : public ArbolSintactico {
-	public:
-		int valor;
-		numero(): ArbolSintactico(NUMEROS) {is_type = 1;}
-		numero(int v) : valor(v), ArbolSintactico(NUMEROS){}
-		virtual void imprimir(int i) {
-			if (!is_type){
-				for (int j = 0; j < i; j++) cout << "	";
-				cout << "numero: " << valor << endl;
-			}
-		}
-};
-/* Definicion de la clase booleano */
-class booleano : public ArbolSintactico {
-	public:
-		bool valor;
-		booleano(): ArbolSintactico(BOOLEANOS) {is_type = 1;}
-		booleano(bool v) : valor(v), ArbolSintactico(BOOLEANOS) {}
-		virtual void imprimir(int i) {
-			if (!is_type){
-				for (int j = 0; j < i; j++) cout << "	";
-				cout << "booleano: " << valor << endl;
-			}
-		}
-};
-
-/* Definicion de la clase caracter */
-class character : public ArbolSintactico {
-	public:
-		char valor;
-		character() : ArbolSintactico(CHARACTERS) {is_type = 1;}
-		character(char v) : valor(v), ArbolSintactico(CHARACTERS) {}
-		virtual void imprimir(int i) {
-			if (!is_type){
-				for (int j = 0; j < i; j++) cout << "	";
-				cout << "character: " << valor << endl;
-			}
-		}
-};
 
 /* Definicion de la clase identificador */
 class identificador : public ArbolSintactico {
@@ -546,13 +730,13 @@ class identificador : public ArbolSintactico {
 		virtual void imprimir(int i) {
 			string ty;
 			switch (ident){
-				case 1:
+				case NUMEROS:
 					ty = "numero";
 				break;
-				case 2:
+				case BOOLEANOS:
 					ty = "booleano";
 				break;
-				case 3:
+				case CHARACTERS:
 					ty = "character";
 				break;
 			}
@@ -575,8 +759,25 @@ class identificador : public ArbolSintactico {
 					sprintf(error_strp,"%s ya habia sido declarada antes. [LINEA: %d]", c, yylineno);
 					throw error_strp;
 				}
+				robots[valor] = new Robot(tipo, head_table);
+				// Declaracion de simbolos
 				head_table->padre->mapa[valor] = tipo;
 				head_table->mapa["me"] = tipo;
+				// Declaracion de valores
+				variable * temp;
+				switch(tipo){
+					case NUMEROS:
+						temp = new variable_int(tipo);
+					break;
+					case BOOLEANOS:
+						temp = new variable_bool(tipo);
+					break;
+					case CHARACTERS:
+						temp = new variable_char(tipo);
+					break;
+				}
+				head_table->valores["me"] = temp;
+				head_table->padre->valores[valor] = head_table->valores["me"];
 			} else {
 				if (head_table->mapa.count(valor) > 0) {
 					const char * c = valor.c_str();
@@ -587,6 +788,93 @@ class identificador : public ArbolSintactico {
 			}
 			ident = tipo;
 			tabla = head_table;
+		}
+		virtual void activate(){
+			robots[valor]->activate();
+		}
+
+		virtual void add_comportamiento(ArbolSintactico * comp){
+			robots[valor]->comportamientos = comp;
+		}
+};
+
+
+/* Definicion de la clase que engloba las instrucciones del robot */
+
+class intr_robot : public ArbolSintactico {
+		enum inst { T_ACTIVATE, T_DEACTIVATE, T_ADVANCE, T_COLLECT, T_READ, SEND, RECEIVE };
+	public:
+		ArbolSintactico * declaraciones;
+		inst instruccion;
+		intr_robot(ArbolSintactico * l, int m) : declaraciones(l), instruccion(static_cast<inst>(m)) {}
+		intr_robot(int m) : instruccion(static_cast<inst>(m)) {}
+		virtual void imprimir(int i){
+			for (int j = 0; j < i; j++) cout << "	";
+			switch(instruccion){
+				case T_ACTIVATE:
+					cout << "ACTIVATE:" << endl;
+					break;
+				case T_DEACTIVATE:
+					cout << "DEACTIVATE:" << endl;
+					break;
+				case T_ADVANCE:
+					cout << "ADVANCE:" << endl;
+					break;
+				case T_COLLECT:
+					cout << "COLLECT:" << endl;
+					break;
+				case T_READ:
+					cout << "READ:" << endl;
+					break;
+				case SEND:
+					cout << "SEND." << endl;
+					break;
+				case RECEIVE:
+					cout << "RECEIVE:" << endl;
+					break;
+			}
+			if (declaraciones != NULL){
+				declaraciones -> imprimir(i + 1);
+			}
+		}
+
+		virtual void ejecutar(){
+			switch(instruccion){
+				case T_ACTIVATE:
+					cout << "Activando robot " << endl;
+					declaraciones->activate();
+					break;
+				case T_DEACTIVATE:
+					cout << "Desactivando robot " << endl;
+					declaraciones->deactivate();
+					break;
+				case SEND:
+					if ( head_table->valores["me"]->init ) {
+						switch(head_table->valores["me"]->tipo){
+							case NUMEROS: {
+								int * numero = static_cast<variable_int * >(head_table->valores["me"])->valor;
+								cout << *numero;
+								break;
+							}
+							case CHARACTERS: {
+								char * character = static_cast<variable_char * >(head_table->valores["me"])->valor;
+								cout << *character;
+								break;
+							}
+							case BOOLEANOS: {
+								bool * valor = static_cast<variable_bool * >(head_table->valores["me"])->valor;
+								cout << * valor;
+								break;
+							}
+						}
+					} else {
+						cout << " Error se esta utilizando la variable sin inicializar el bot.";
+					}
+				break;
+				case T_READ:
+					
+				break;
+			}
 		}
 };
 
@@ -606,7 +894,10 @@ class declaracion : public ArbolSintactico {
 		ArbolSintactico * tipo;
 		ArbolSintactico * variable;
 		ArbolSintactico * comportamiento;
-		declaracion(ArbolSintactico * t, ArbolSintactico * i) : tipo(t), variable(i) {variable->add_variable(tipo->ident,1);}
+		declaracion(ArbolSintactico * t, ArbolSintactico * i) : tipo(t), variable(i) {
+			variable->add_variable(tipo->ident,1);
+			
+		}
 		virtual void imprimir(int i){
 			tipo -> imprimir(i);	
 			variable -> imprimir(i);
@@ -614,11 +905,18 @@ class declaracion : public ArbolSintactico {
 				comportamiento -> imprimir(i+1);	
 			}
 		}
+
+		virtual void add_comportamiento(ArbolSintactico * comp){
+			comportamiento = comp;
+			variable->add_comportamiento(comp);
+		}
 };
 
 /* Definicion de la clase que engloba los comportamientos de los bots */
 class inside_bot : public ArbolSintactico {
+	
 	public:
+		enum inst { ACTIVATION, DEACTIVATION, DEFAULT, EXPR};
 		ArbolSintactico * condicion;
 		ArbolSintactico * instruccion;
 		inside_bot(ArbolSintactico * t, ArbolSintactico * i) : condicion(t), instruccion(i){check();}
@@ -635,6 +933,16 @@ class inside_bot : public ArbolSintactico {
 			if (condicion->ident != BOOLEANOS && condicion->ident != CONDICION){
 				sprintf(error_strp,"Error de tipo, la condicion debe ser booleana [LINEA: %d]", yylineno);
 				throw error_strp;
+			}
+		}
+
+		virtual void ejecutar(){
+			instruccion->ejecutar();
+		}
+
+		virtual void activate(){
+			if (static_cast<on_condicion *>(condicion)->condicion == 0){
+				instruccion->ejecutar();
 			}
 		}
 };

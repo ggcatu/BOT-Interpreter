@@ -15,6 +15,8 @@ extern char * yytext;
 ArbolSintactico * root_ast;
 tabla_simbolos * head_table = NULL;
 tabla_simbolos * tmp_table = NULL;
+map<string,Robot *> robots;
+
 bool error_sintactico = 0; 
 void yyerror (char const *s) 
 {	error_sintactico = 1;
@@ -75,7 +77,7 @@ lDecs 		: declaracion										{$$ = new instruccion($1);}
 			| lDecs declaracion									{$$ = new instruccion($1,$2);}
 			;
 
-declaracion : declaracionf lComp END 							{$$ = $1; static_cast<declaracion *>($$)->comportamiento = $2;head_table = head_table->padre;}
+declaracion : declaracionf lComp END 							{$$ = $1; static_cast<declaracion *>($$)->add_comportamiento($2);head_table = head_table->padre;}
 			| declaracionf END 									{$$ = $1; head_table = head_table->padre;}
 			;
 
@@ -89,14 +91,12 @@ lComp		: ON condicion DOSPUNTOS instrsRobot END 			{$$ = new inside_bot($2,$4);}
 instrsRobot : instrRobot 										{$$ = new instruccion($1);}
 			| instrsRobot instrRobot 							{$$ = new instruccion($1,$2);}
 			;
-// Chequea tipo de robot
+
 instrRobot 	: COLLECT PUNTO										{$$ = new intr_robot(3);}
-// Chequea doble declaracion
 			| COLLECT AS decl PUNTO								{$$ = new intr_robot($3, 3); $3->add_variable(head_table->mapa.at("me"),0);}
 
-// Chequea tipo de robot
-			| STORE expr PUNTO									{$$ = new intr_robot($2, 0);}
-			| DROP expr PUNTO									{$$ = new intr_robot($2, 1);}
+			| STORE expr PUNTO									{$$ = new intr_extra($2, 0);}
+			| DROP expr PUNTO									{$$ = new intr_extra($2, 1);}
 
 
 			| UP expr PUNTO										{$$ = new intr_movimiento($2,0);}
@@ -104,9 +104,9 @@ instrRobot 	: COLLECT PUNTO										{$$ = new intr_robot(3);}
 			| LEFT expr PUNTO									{$$ = new intr_movimiento($2,2);}
 			| RIGHT expr PUNTO									{$$ = new intr_movimiento($2,3);}
 
-// Chequea tipo de robot
+
 			| READ PUNTO										{$$ = new intr_robot(4);}
-// Chequea doble declaracion
+
 			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4); $3->add_variable(head_table->mapa.at("me"),0);}
 			| SEND PUNTO										{$$ = new intr_robot(5);}
 			| RECEIVE PUNTO										{$$ = new intr_robot(6);}
@@ -159,10 +159,10 @@ expr		: expr SUMA expr									{$$ = new expr_aritmetica($1,$3,0);}
 			| expr DISYUNCION expr								{$$ = new expr_booleana($1,$3,6);}
 			| expr CONJUNCION expr								{$$ = new expr_booleana($1,$3,7);}
 			| NEGACION expr										{$$ = new expr_booleana($2,8);}	
-			| TRUE												{$$ = new booleano(1);}
-			| FALSE												{$$ = new booleano(0);}			
+			| TRUE												{$$ = new expr_booleana(new booleano(1),9);}
+			| FALSE												{$$ = new expr_booleana(new booleano(0),9);}		
 			| IDENTIFIER										{$$ = new identificador($1); $$->check();}
 			| CHARACTER											{$$ = new character($1);}
-			| number											{$$ = new numero($1);}
+			| number											{$$ = new expr_aritmetica(new numero($1), 7);}
 			| ME 												{$$ = new me;}
 			;

@@ -1,51 +1,14 @@
 create
-	int bot pedro, matias
-		on deactivation:
-		send.
+	bool bot b,c
+		on activation:
+			store (1 < 2). send.
+			read as gabirel.
 		end
-		on default:
-		send.
+		on deactivation:
+			store false. send.
 		end
 	end
-	int bot alfredo
-		on deactivation:
-		send.
-		end
-		on default:
-		send.
-		end
-	end
-
 execute
-	activate matias.
-	if matias > 5:
-		advance pedro.
-	end
-	if matias = 5:
-		activate matias.
-	end
-	create
-		int bot azul
-			on deactivation:
-			send.
-			end
-		end
-		char bot azuls
-			on deactivation:
-			send.
-			end
-		end
-	execute
-		activate azul.
-		activate matias.
-		activate pedro.
-		create
-			char bot azul, azules
-		end
-		execute
-			activate azul.
-			activate matias.
-			activate pedro.
-		end
-	end
+	activate b.
+	activate c.
 end

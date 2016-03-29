@@ -41,7 +41,7 @@ extern bool error_sintactico;
 extern map<string,int> bigMap;
 
 int main(int argc, char** argv) {
-
+	FILE * temp = yyin;
 // Cambio del input stream al archivo en argv[1]
     yyin = fopen(argv[1],"r");
     if (yyin == false){
@@ -69,10 +69,13 @@ int main(int argc, char** argv) {
 		}
 		catch(...){
 			cout << "error";
+			return 1;
 		}
-		// catch(const char* const errorMessage){
-		// 	cout << errorMessage << endl;
-		// }
+	}
+	if (!error_sintactico){
+		cout << "EJECUTANDO EL PROGRAMA:" << endl << endl;
+		yyin = temp;
+		root_ast->ejecutar();
 	}
 	return 0;
 }

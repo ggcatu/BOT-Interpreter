@@ -1,0 +1,2 @@
+g++ scanner.o definiciones.o lex.yy.c parser.tab.c ast.cpp -o ContBot
+makefile:2: recipe for target 'ContBot' failed

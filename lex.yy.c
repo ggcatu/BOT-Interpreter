@@ -1032,7 +1032,7 @@ return DOWN;
 case 54:
 YY_RULE_SETUP
 #line 73 "lexer.l"
-return CHARACTER;
+{yylval.ch = yytext[1]; return CHARACTER;}
 	YY_BREAK
 case 55:
 YY_RULE_SETUP

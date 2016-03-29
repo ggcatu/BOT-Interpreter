@@ -15,35 +15,23 @@ en el proyecto
 #include <stdexcept>
 #include <map>
 #include <vector>
+#include "arb_def.h"
+#include "robot.h"
 using namespace std;
 #define NUMEROS 1
 #define BOOLEANOS 2
 #define CHARACTERS 3
 #define CONDICION 4
 
-extern int yyparse();
-/* Definicion de la clase base ArbolSintactico */
+/* Definiciones externas (parser.y)
+	que permiten compartir el codigo.
+*/
 
-class ArbolSintactico {
-	ArbolSintactico * first;
-	public:
-		int ident;
-		int linea;
-		bool is_type;
-		ArbolSintactico(): is_type(0){};
-		ArbolSintactico(int i): ident(i),is_type(0) {};
-		ArbolSintactico(ArbolSintactico * l): first(l),is_type(0) {};
-		virtual void imprimir(int i){ if(first != NULL) first->imprimir(i); }; 
-		virtual int get_ident(){ return ident; }
-		virtual void add_variable(int tipo, bool doble){ return; }
-		virtual void check(){;}
-		virtual void ejecutar(){if(first != NULL) first->ejecutar();}
-		virtual int * get_value(){;}
-		virtual bool * get_bool(){;}
-		virtual void activate(){;}
-		virtual void deactivate(){;}
-		virtual void add_comportamiento(ArbolSintactico * comp){;}
-};
+extern tabla_simbolos * head_table;
+extern int yylineno;
+extern char error_strp[1000];
+extern map<string,Robot *> robots;
+extern int yyparse();
 
 /* Definicion de la clase numero */
 class numero : public ArbolSintactico {
@@ -90,117 +78,14 @@ class character : public ArbolSintactico {
 				cout << "character: " << valor << endl;
 			}
 		}
-};
 
-
-class variable { 
-	public: 
-		int tipo;
-		bool init;
-		variable(int ty): tipo(ty), init(false){};
-};
-
-class variable_int: public variable {
-	public:
-		int * valor;
-		variable_int(int ty): variable(ty) {
-			valor = new int(0);
-		};
-};
-
-class variable_bool: public variable {
-	public:
-		bool * valor;
-		variable_bool(int ty): variable(ty) {};
-};
-
-class variable_char: public variable {
-	public:
-		char * valor;
-		variable_char(int ty): variable(ty) {};
-};
-
-/* Clase tabla de simbolos, implementada con una tabla de hash
-	y un apuntador a su padre, para poder tener la estructura 
-	jerarquica requerida para el proyecto
-*/
-
-class tabla_simbolos {
-	public:
-		map<string,int> mapa;
-		map<string,variable *> valores;
-		tabla_simbolos * padre;
-		tabla_simbolos(){padre = NULL;};
-		void print() { 
-			for(map<string, int>::const_iterator it = mapa.begin();
-			    it != mapa.end(); ++it)
-			{
-			    cout << it->first.c_str() << " " << it->second << endl;
-			}
+		virtual char * get_character(){
+			return &valor;
 		}
 };
 
-/* Definiciones externas (parser.y)
-	que permiten compartir el codigo.
-*/
 
-extern tabla_simbolos * head_table;
-extern int yylineno;
-extern char error_strp[1000];
 
-/* Definicion de robot
-*/
-
-class Robot {
-	public:
-		int tipo;
-		ArbolSintactico * valor;
-		ArbolSintactico * comportamientos;
-		bool init;
-		bool activated;
-		tabla_simbolos * tabla;
-	Robot(int ty, tabla_simbolos * head){
-		tipo = ty;
-		tabla = head;
-		activated = false;
-		init = false;
-		comportamientos = NULL;
-	}
-
-	void activate(){
-		if (!activated){
-			tabla_simbolos * tmp = head_table;
-			head_table = tabla;
-			activated = true;
-			if (comportamientos != NULL) {
-				comportamientos -> activate();
-			} else {
-				cout << "ERROR COMPORTAMIENTO NULO" << endl;
-			}
-			head_table = tmp;
-		} else {
-			cout << "ERROR ESTAS ACTIVANDO 2 VECES" << endl;
-		}
-	}
-
-	void deactivate(){
-		if (activated){
-			tabla_simbolos * tmp = head_table;
-			head_table = tabla;
-			activated = false;
-			if (comportamientos != NULL) {
-				comportamientos ->ejecutar();
-			} else {
-				cout << "ERROR COMPORTAMIENTO NULO" << endl;
-			}
-			head_table = tmp;
-		} else {
-			cout << "ERROR ESTAS DESACTIVANDO DESACTIVADO" << endl;
-		}
-	}
-};
-
-extern map<string,Robot *> robots;
 /* Definicion de la clase raiz */
 
 class raiz : public ArbolSintactico {
@@ -283,6 +168,18 @@ class instruccion : public ArbolSintactico {
 				left->deactivate();
 			}
 			rigth->deactivate();
+		}
+
+		virtual bool advance(){
+			if (left != NULL){
+				if (left->advance()) {
+					return true;
+				}
+			}
+			if (rigth->advance()){
+				return true;
+			}
+			return false;
 		}
 
 		virtual void add_comportamiento(ArbolSintactico * comp){
@@ -376,6 +273,30 @@ class intr_guardia : public ArbolSintactico {
 				sprintf(error_strp,"Error de tipo, se esperaba un booleano [LINEA: %d]", yylineno);
 				throw error_strp;
 			}
+		}
+
+		virtual void ejecutar(){
+			switch(instruccion){
+				case IF:
+					if (* condicion->get_bool()) {
+						cuerpo -> ejecutar();
+					}
+					break;
+				case IF_ELSE:
+					if (* condicion->get_bool()) {
+						cuerpo -> ejecutar();
+					} else {
+						cuerpo_else -> ejecutar();
+					}		
+					break;
+				case WHILE:
+					condicion -> imprimir(0);
+					while (* condicion->get_bool()) {
+						cuerpo -> ejecutar();
+					}
+					break;
+			}
+			
 		}
 };
 
@@ -507,7 +428,7 @@ class intr_extra : public ArbolSintactico {
 						cout << "ERROR DE TIPO" << endl;
 					} else {
 						head_table->valores["me"]->init = true; 
-						static_cast<variable_char * >(head_table->valores["me"])->valor = &static_cast<character *>(down)->valor; 
+						static_cast<variable_char * >(head_table->valores["me"])->valor = static_cast<character *>(down)->get_character(); 
 					}
 					break;
 				}
@@ -682,7 +603,7 @@ class on_condicion : public ArbolSintactico {
 				sprintf(error_strp,"%s ya habia sido declarada antes. [LINEA: %d]", c, yylineno);
 				throw error_strp;
 			}
-			if (condicion == ACTIVATION || condicion == DEACTIVATION){
+			if (condicion == EXPR){
 				check();
 			}
 			head_table->mapa[nombre] = 0;	
@@ -694,6 +615,10 @@ class on_condicion : public ArbolSintactico {
 					sprintf(error_strp,"default debe ser el ultimo comportamiento. [LINEA: %d]", yylineno);
 					throw error_strp;
 			}
+		}
+
+		virtual bool * get_bool(){
+			return expr->get_bool();
 		}
 
 
@@ -789,8 +714,22 @@ class identificador : public ArbolSintactico {
 			ident = tipo;
 			tabla = head_table;
 		}
+
+		virtual int * get_value(){
+			return static_cast<variable_int * >(head_table->valores[valor])->valor;
+		}
+
 		virtual void activate(){
 			robots[valor]->activate();
+		}
+
+		virtual void deactivate(){
+			robots[valor]->deactivate();
+		}
+
+		virtual bool advance(){
+			robots[valor]->advance();
+			return true;
 		}
 
 		virtual void add_comportamiento(ArbolSintactico * comp){
@@ -841,12 +780,15 @@ class intr_robot : public ArbolSintactico {
 		virtual void ejecutar(){
 			switch(instruccion){
 				case T_ACTIVATE:
-					cout << "Activando robot " << endl;
+					// cout << "Activando robot " << endl;
 					declaraciones->activate();
 					break;
 				case T_DEACTIVATE:
-					cout << "Desactivando robot " << endl;
+					// cout << "Desactivando robot " << endl;
 					declaraciones->deactivate();
+					break;
+				case T_ADVANCE:
+					declaraciones->advance();
 					break;
 				case SEND:
 					if ( head_table->valores["me"]->init ) {
@@ -885,6 +827,10 @@ class me : public ArbolSintactico {
 		virtual void imprimir(int i) {
 			for (int j = 0; j < i; j++) cout << "	";
 			cout << "ME" << endl;
+		}
+
+		virtual int * get_value(){
+			return static_cast<variable_int *>(head_table->valores["me"])->valor;
 		}
 }; 
 
@@ -944,5 +890,21 @@ class inside_bot : public ArbolSintactico {
 			if (static_cast<on_condicion *>(condicion)->condicion == 0){
 				instruccion->ejecutar();
 			}
+		}
+
+		virtual void deactivate(){
+			if (static_cast<on_condicion *>(condicion)->condicion == 1){
+				instruccion->ejecutar();
+			}
+		}
+
+		virtual bool advance(){
+			if (static_cast<on_condicion *>(condicion)->condicion == 2 || 
+				static_cast<on_condicion *>(condicion)->condicion == 3 &&
+				* condicion->get_bool()){ 
+					instruccion -> ejecutar();
+					return true;
+			}
+			return false;
 		}
 };

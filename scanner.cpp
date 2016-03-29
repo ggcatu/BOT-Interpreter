@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 // Imprimir AST.
 	if (!error_sintactico){
 	   try {
-		root_ast->imprimir(0);	
+		//root_ast->imprimir(0);	
 		}
 		catch(...){
 			cout << "error";
@@ -74,7 +74,6 @@ int main(int argc, char** argv) {
 	}
 	if (!error_sintactico){
 		cout << "EJECUTANDO EL PROGRAMA:" << endl << endl;
-		yyin = temp;
 		root_ast->ejecutar();
 	}
 	return 0;

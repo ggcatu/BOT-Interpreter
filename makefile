@@ -1,4 +1,4 @@
-ContBot: scanner.o robot.o lex.yy.c parser.tab.h definiciones.o ast.h ast.cpp
+ContBot: scanner.o robot.o lex.yy.c parser.tab.c definiciones.o ast.h ast.cpp
 	g++ scanner.o definiciones.o robot.o lex.yy.c parser.tab.c ast.cpp -o ContBot
 
 scanner.o: scanner.cpp parser.tab.h
@@ -13,7 +13,7 @@ robot.o: tabla_simbolos.h arb_def.h robot.h robot.cpp variables.h
 lex.yy.c: lexer.l
 	flex lexer.l
 
-parser.tab.h: parser.y
+parser.tab.c: parser.y
 	bison -d parser.y
 
 clean:

@@ -32,7 +32,8 @@ extern int yylineno;
 extern char error_strp[1000];
 extern map<string,Robot *> robots;
 extern int yyparse();
-
+extern map<int, map<int, variable *> > matriz_bot;
+extern Robot * working_bot;
 /* Definicion de la clase numero */
 class numero : public ArbolSintactico {
 	public:
@@ -49,6 +50,7 @@ class numero : public ArbolSintactico {
 			return &valor;
 		}
 };
+
 /* Definicion de la clase booleano */
 class booleano : public ArbolSintactico {
 	public:
@@ -224,6 +226,29 @@ class intr_movimiento : public ArbolSintactico {
 				throw error_strp;
 			}
 		}
+
+		virtual void ejecutar(){
+			int mov = * down->get_value();
+			if (mov < 0){
+				cout << " ERROR ";
+			}
+
+			switch(movimiento){
+				case UP:
+					working_bot->posicion[0] += mov;
+					break;
+				case DOWN:
+					working_bot->posicion[0] -= mov;
+					break;
+				case LEFT:
+					working_bot->posicion[1] -= mov;
+					break;
+				case RIGTH:
+					working_bot->posicion[1] += mov;
+					break;
+			}
+			cout << "Posicion nueva:" << working_bot->posicion[0] << ", " << working_bot->posicion[1] << " ADDED : " << mov << endl;
+		}
 };
 
 
@@ -354,7 +379,7 @@ class expr_aritmetica : public ArbolSintactico {
 				if (numero_der->ident != NUMEROS ||
 					numero_izq->ident != NUMEROS){
 					sprintf(error_strp,"Error de tipo, se esperaban dos int [LINEA: %d]", yylineno);
-						throw error_strp;
+					throw error_strp;
 				}
 			} else {
 				if (numero_der->ident != NUMEROS && instruccion != PARENTESIS){
@@ -413,35 +438,59 @@ class intr_extra : public ArbolSintactico {
 			down -> imprimir(i + 1);
 		}
 		virtual void ejecutar(){
-			switch(head_table->valores["me"]->tipo){
-				case NUMEROS: {
-					if (down -> ident != NUMEROS){
-						cout << "ERROR DE TIPO" << endl;
-					} else {
-						head_table->valores["me"]->init = true; 
-						static_cast<variable_int * >(head_table->valores["me"])->valor = static_cast<expr_aritmetica *>(down)->get_value(); 
-					}
+			switch(movimiento){
+					case STORE:
+						switch(head_table->valores["me"]->tipo){
+							case NUMEROS: {
+								if (down -> ident != NUMEROS){
+									cout << "ERROR DE TIPO" << endl;
+								} else {
+									head_table->valores["me"]->init = true; 
+									static_cast<variable_int * >(head_table->valores["me"])->valor = static_cast<expr_aritmetica *>(down)->get_value(); 
+								}
+								break;
+							}
+							case CHARACTERS: {
+								if (down -> ident != CHARACTERS){
+									cout << "ERROR DE TIPO" << endl;
+								} else {
+									head_table->valores["me"]->init = true; 
+									static_cast<variable_char * >(head_table->valores["me"])->valor = static_cast<character *>(down)->get_character(); 
+								}
+								break;
+							}
+							case BOOLEANOS: {
+								if (down -> ident != BOOLEANOS){
+									cout << "ERROR DE TIPO" << endl;
+								} else {
+									head_table->valores["me"]->init = true; 
+									static_cast<variable_bool * >(head_table->valores["me"])->valor = static_cast<booleano *>(down)->get_bool(); 
+								}
+								break;
+							}
+						}
 					break;
-				}
-				case CHARACTERS: {
-					if (down -> ident != CHARACTERS){
-						cout << "ERROR DE TIPO" << endl;
-					} else {
-						head_table->valores["me"]->init = true; 
-						static_cast<variable_char * >(head_table->valores["me"])->valor = static_cast<character *>(down)->get_character(); 
-					}
+					case DROP:
+						switch(down -> ident){
+							case NUMEROS: {
+								variable_int * tmp = new variable_int(NUMEROS, down->get_value(), true);
+								matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]] = tmp;
+								break;
+							}
+							case CHARACTERS: {
+								variable_char * tmp = new variable_char(CHARACTERS, down->get_character(), true);
+								matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]] = tmp;
+								break;
+							}
+							case BOOLEANOS: {
+								variable_bool * tmp = new variable_bool(BOOLEANOS, down->get_bool(), true);
+								matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]] = tmp;
+								break;
+							}
+						}
 					break;
-				}
-				case BOOLEANOS: {
-					if (down -> ident != BOOLEANOS){
-						cout << "ERROR DE TIPO" << endl;
-					} else {
-						head_table->valores["me"]->init = true; 
-						static_cast<variable_bool * >(head_table->valores["me"])->valor = static_cast<booleano *>(down)->get_bool(); 
-					}
-					break;
-				}
 			}
+			
 		}
 };
 
@@ -720,6 +769,7 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual void activate(){
+			cout <<" ACTIVANDO ROBOT " << endl;
 			robots[valor]->activate();
 		}
 
@@ -780,7 +830,7 @@ class intr_robot : public ArbolSintactico {
 		virtual void ejecutar(){
 			switch(instruccion){
 				case T_ACTIVATE:
-					// cout << "Activando robot " << endl;
+					 cout << "activating robot " << endl;
 					declaraciones->activate();
 					break;
 				case T_DEACTIVATE:
@@ -815,6 +865,31 @@ class intr_robot : public ArbolSintactico {
 				break;
 				case T_READ:
 					
+				break;
+				case T_COLLECT:
+					if (matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]->tipo != head_table->valores["me"]->tipo){
+						cout << "Este robot no puede recoger este valor, no coinciden los tipos" << endl;
+					}
+					head_table->valores["me"] = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]];
+					// switch(head_table->valores["me"]->tipo){
+					// 		case NUMEROS: {
+					// 			head_table->valores["me"] = 
+					// 			*static_cast<variable_char *>(matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]])->valor 
+					// 			int * numero = static_cast<variable_int * >(head_table->valores["me"])->valor;
+					// 			cout << *numero;
+					// 			break;
+					// 		}
+					// 		case CHARACTERS: {
+					// 			char * character = static_cast<variable_char * >(head_table->valores["me"])->valor;
+					// 			cout << *character;
+					// 			break;
+					// 		}
+					// 		case BOOLEANOS: {
+					// 			bool * valor = static_cast<variable_bool * >(head_table->valores["me"])->valor;
+					// 			cout << * valor;
+					// 			break;
+					// 		}
+					// 	}
 				break;
 			}
 		}

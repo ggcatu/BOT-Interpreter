@@ -16,7 +16,6 @@ ArbolSintactico * root_ast;
 tabla_simbolos * head_table = NULL;
 tabla_simbolos * tmp_table = NULL;
 map<string,Robot *> robots;
-Robot * working_bot = NULL;
 bool error_sintactico = 0; 
 void yyerror (char const *s) 
 {	error_sintactico = 1;

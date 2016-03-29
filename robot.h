@@ -7,12 +7,14 @@
 
 class Robot {
 	public:
-		int tipo;
+		int tipo ;
 		ArbolSintactico * valor;
 		ArbolSintactico * comportamientos;
 		bool init;
 		bool activated;
 		tabla_simbolos * tabla;
+		int posicion[2];
+
 	Robot(int ty, tabla_simbolos * head);
 
 	void activate();

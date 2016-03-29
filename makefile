@@ -1,7 +1,7 @@
 ContBot: scanner.o robot.o lex.yy.c parser.tab.c definiciones.o ast.h ast.cpp
 	g++ scanner.o definiciones.o robot.o lex.yy.c parser.tab.c ast.cpp -o ContBot
 
-scanner.o: scanner.cpp parser.tab.h
+scanner.o: scanner.cpp parser.tab.c
 	g++ -c scanner.cpp definiciones.cpp
 
 definiciones.o:

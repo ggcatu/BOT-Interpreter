@@ -501,7 +501,6 @@ class intr_extra : public ArbolSintactico {
 						//cout <<"DROPEO" << endl;
 						switch(down -> ident){
 							case NUMEROS: {
-
 								variable_int * tmp = new variable_int(NUMEROS, down->get_value(), true);
 								matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]] = tmp;
 								break;
@@ -849,7 +848,7 @@ class identificador : public ArbolSintactico {
 
 		virtual void add_value(variable * value){
 			head_table->valores[valor]->init = true;
-			head_table->valores[valor] = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]->clone();
+			head_table->valores[valor] = value->clone();
 		}
 };
 
@@ -930,8 +929,7 @@ class intr_robot : public ArbolSintactico {
 				break;
 
 				case T_READ:{
-					// cout << " Donde estamos " << endl;
-					// head_table->print_val();
+					
 					switch(head_table->valores["me"]->tipo){
 						case NUMEROS: {
 							int leidos, valor;
@@ -944,9 +942,14 @@ class intr_robot : public ArbolSintactico {
 									throw error_strp;
 								}
 							}
-							valor = atoi(numero);						
-							head_table->valores["me"]->init = true; 
-							static_cast<variable_int * >(head_table->valores["me"])->valor = new int(valor);
+							valor = atoi(numero);
+							if (declaraciones == NULL){
+								head_table->valores["me"]->init = true; 
+								static_cast<variable_int * >(head_table->valores["me"])->valor = new int(valor);
+							} else {
+								variable_int * tmp = new variable_int(NUMEROS, new int(valor), true);
+ 								declaraciones->add_value(tmp);
+							}
 							break;
 							}
 						case CHARACTERS: {
@@ -974,8 +977,13 @@ class intr_robot : public ArbolSintactico {
 								}
 								valor = tmp[0];
 							}
-							head_table->valores["me"]->init = true; 
-							static_cast<variable_char * >(head_table->valores["me"])->valor = new char(valor);
+							if (declaraciones == NULL){
+								head_table->valores["me"]->init = true; 
+								static_cast<variable_char * >(head_table->valores["me"])->valor = new char(valor);							
+							} else {
+								variable_char * tmp = new variable_char(NUMEROS, new char(valor), true);
+								declaraciones->add_value(tmp);
+							}
 							break;
 						}
 						case BOOLEANOS: {
@@ -983,12 +991,22 @@ class intr_robot : public ArbolSintactico {
 							scanf("%s", valor);
 							string temp(valor);
 							if (!(temp.compare("true"))){
-								head_table->valores["me"]->init = true; 
-								static_cast<variable_bool * >(head_table->valores["me"])->valor = new bool(true);
+								if (declaraciones == NULL){
+									head_table->valores["me"]->init = true;
+									static_cast<variable_bool * >(head_table->valores["me"])->valor = new bool(true);
+								} else {
+									variable_bool * tmp = new variable_bool(NUMEROS, new bool(true), true);
+									declaraciones->add_value(tmp);
+								}
 							}
 							if (!(temp.compare("false"))){
-								head_table->valores["me"]->init = true; 
-								static_cast<variable_bool * >(head_table->valores["me"])->valor = new bool(false);
+								if (declaraciones == NULL) {
+									head_table->valores["me"]->init = true; 
+									static_cast<variable_bool * >(head_table->valores["me"])->valor = new bool(false);					
+								} else {
+									variable_bool * tmp = new variable_bool(NUMEROS, new bool(false), true);
+									declaraciones->add_value(tmp);
+								}
 							}
 
 							if (temp.compare("true") && temp.compare("false")){

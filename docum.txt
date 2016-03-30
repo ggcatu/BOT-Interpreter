@@ -1,19 +1,13 @@
 create
-	int bot c, counter
+	bool bot c
 		on activation:
-			drop 3.
-			collect.
-			send.
-			store 5.
-			send.
-			up.
-			drop 6.
-			down.
-			collect as pedro, ar.
-			store pedro.
+			read.
+		end
+		on true:
 			send.
 		end
 	end
 execute
 	activate c.
+	advance c.
 end

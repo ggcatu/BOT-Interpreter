@@ -15,6 +15,8 @@ en el proyecto
 #include <stdexcept>
 #include <map>
 #include <vector>
+#include <ctype.h>
+#include <cstdlib>
 #include "arb_def.h"
 #include "robot.h"
 using namespace std;
@@ -607,6 +609,7 @@ class expr_booleana : public ArbolSintactico {
 				case MENOR:
 					return new bool(*bool_izq->get_value() < *bool_der->get_value());
 				case MAYOR:
+					cout << *bool_izq->get_value() << " ES MAYOR " << endl;
 					return new bool(*bool_izq->get_value() > *bool_der->get_value());
 				case MENORIGUAL:
 					return new bool(*bool_izq->get_value() <= *bool_der->get_value());
@@ -884,8 +887,73 @@ class intr_robot : public ArbolSintactico {
 						throw error_strp;
 					}
 				break;
-				case T_READ:
-					
+				case T_READ:{
+					switch(head_table->valores["me"]->tipo){
+						case NUMEROS: {
+							int leidos, valor;
+							char numero[11];
+							leidos = scanf("%s", numero);
+							string tmp(numero);
+							for(int i = 0; i < tmp.length(); i++){
+								if (!isdigit(numero[i])){
+									sprintf(error_strp,"Error de lectura en el terminal, se esperaba un entero.", yylineno);
+									throw error_strp;
+								}
+							}
+							valor = atoi(numero);						
+							head_table->valores["me"]->init = true; 
+							static_cast<variable_int * >(head_table->valores["me"])->valor = new int(valor);
+							break;
+							}
+						case CHARACTERS: {
+							char valor;
+							bool assigned = false;
+							char numero[11];
+							scanf("%s", numero);
+							string tmp(numero);
+							if (!tmp.compare("\\n") && !assigned){
+								assigned = true;
+								valor = '\n';
+							}
+							if (!tmp.compare("\\t") && !assigned){
+								assigned = true;
+								valor = '\t';
+							}
+							if (!tmp.compare("\\'") && !assigned){
+								assigned = true;
+								valor = '\'';
+							}
+							if (!assigned){
+								if(tmp.length() > 1){
+									sprintf(error_strp,"Error de lectura en el terminal, se esperaba un caracter");
+									throw error_strp;
+								}
+								valor = tmp[0];
+							}
+							head_table->valores["me"]->init = true; 
+							static_cast<variable_char * >(head_table->valores["me"])->valor = new char(valor);
+							break;
+						}
+						case BOOLEANOS: {
+							char valor[100];
+							scanf("%s", valor);
+							string temp(valor);
+							if (!(temp.compare("true"))){
+								head_table->valores["me"]->init = true; 
+								static_cast<variable_bool * >(head_table->valores["me"])->valor = new bool(true);
+							}
+							if (!(temp.compare("false"))){
+								head_table->valores["me"]->init = true; 
+								static_cast<variable_bool * >(head_table->valores["me"])->valor = new bool(false);
+							}
+
+							if (temp.compare("true") && temp.compare("false")){
+								sprintf(error_strp,"Error de lectura en el terminal, se esperaba un booleano");
+								throw error_strp;
+							}
+						}
+					}
+				}
 				break;
 				case T_COLLECT:
 				if (declaraciones == NULL){

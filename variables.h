@@ -1,6 +1,7 @@
 #ifndef VARIA_H
 #define VARIA_H
-
+#include <iostream>
+using namespace std;
 class variable { 
 	public: 
 		int tipo;

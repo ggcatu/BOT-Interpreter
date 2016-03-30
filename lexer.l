@@ -70,7 +70,10 @@ int yycolumn = 1;
 "up"							return UP;
 "as"							return AS;
 "down"							return DOWN;
-'(.|\\n|\\t)' 					{yylval.ch = yytext[1]; return CHARACTER;}
+'\\t'							{yylval.ch = '\t'; return CHARACTER;}
+'\\n'							{yylval.ch = '\n'; return CHARACTER;}
+'\\''							{yylval.ch = '\''; return CHARACTER;}
+'.' 							{yylval.ch = yytext[1]; return CHARACTER;}
 [0-9]+|0+						{yylval.num = atoi(yytext); return number;}
 [a-zA-Z][a-zA-Z0-9_]*			{strcpy(yylval.str,yytext); return IDENTIFIER;}
 \$\$.*							{ }

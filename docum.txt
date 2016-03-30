@@ -1,10 +1,11 @@
 create
-	bool bot c
+	char bot c
 		on activation:
-			read.
+			store '\''.
 		end
 		on true:
 			send.
+			send.send.send.
 		end
 	end
 execute

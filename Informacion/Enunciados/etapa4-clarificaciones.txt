@@ -1,0 +1,39 @@
+﻿################################################################################
+#                                                                              #
+#         ### #   ### ### ### ### ### ### ### ### ### ### #  # ### ###         #
+#         #   #   # # # #  #  #    #  #   # # #    #  # # ## # #   #           #
+#         #   #   ### ###  #  ##   #  #   ### #    #  # # #### ##  ###         #
+#         #   #   # # ##   #  #    #  #   # # #    #  # # # ## #     #         #
+#         ### ### # # # # ### #   ### ### # # ### ### ### #  # ### ###         #
+#                                                                              #
+#         El siguiente  documento  contiene  clarificaciones sobre  el         #
+#         enunciado  de  la cuarta  y  última  fase  del  proyecto  de         #
+#         CI-3725: Traductores e Interpretadores.                              #
+#                                                                              #
+#                                      Última revisión: 25 / 03 / 2016         #
+################################################################################
+
+1) Sobre "Comportamiento Inexistente":
+
+   En  la definición  del  lenguaje  BOT, se  dice  que  los comportamientos  de
+   activación/desactivación  se  ejecutan sólo  si  están  definidos.  A efectos
+   prácticos,  es como si estuvieran  definidos por defecto  con una instrucción
+   estilo 'skip' (no hacer nada).  Es inconsistente que cuando un comportamiento
+   no  esté  definido  se  arroje  un error.  Por  lo  tanto,  al  encontrar  un
+   comportamiento inexistente,  el robot deberá  ejecutar una instrucción  vacía
+   (estilo 'skip').
+
+2) Sobre "Soltado Inadecuado":
+
+   En la definición  del lenguaje BOT,  se dice que el  soltado puede ser  de un
+   tipo igual o diferente al del robot.  Por lo tanto, este error no aplica y no
+   debe verificarse.
+
+3) Sobre "Uso Inadecuado":
+
+   En  el  enunciado  de la  cuarta  fase,  no  se  incluyó  un error  que  debe
+   verificarse:
+   
+   No se puede utilizar el valor de un robot que:
+      1) No esté inicializado con algún valor.
+      2) No esté activo.

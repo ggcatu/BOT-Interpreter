@@ -1,21 +1,19 @@
 create
 	int bot c, counter
 		on activation:
-			up 3.
-			store 3.
 			drop 3.
-			drop 'p'.
-			drop 4.	
-		end
-		on me = 3:
 			collect.
-		end
-		on me > 3:
+			send.
+			store 5.
+			send.
+			up.
+			drop 6.
+			down.
+			collect as pedro, ar.
+			store pedro.
 			send.
 		end
 	end
 execute
 	activate c.
-	advance c.
-	advance c.
 end

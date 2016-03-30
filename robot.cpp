@@ -29,11 +29,13 @@ void Robot::activate(){
 			if (comportamientos != NULL) {
 				comportamientos -> activate();
 			} else {
-				cout << "ERROR COMPORTAMIENTO NULO" << endl;
+				sprintf(error_strp,"Error comportamiento nulo.");
+				throw error_strp;
 			}
 			head_table = tmp;
 		} else {
-			cout << "ERROR ESTAS ACTIVANDO 2 VECES" << endl;
+			sprintf(error_strp,"Error se esta activando un robot activo.");
+			throw error_strp;
 		}
 	}
 
@@ -47,11 +49,13 @@ void Robot::deactivate(){
 			if (comportamientos != NULL) {
 				comportamientos ->deactivate();
 			} else {
-				cout << "ERROR COMPORTAMIENTO NULO" << endl;
+				sprintf(error_strp,"Error comportamiento nulo.");
+				throw error_strp;
 			}
 			head_table = tmp;
 		} else {
-			cout << "ERROR ESTAS DESACTIVANDO DESACTIVADO" << endl;
+			sprintf(error_strp,"Error se esta desactivando un robot desactivado.");
+			throw error_strp;
 		}
 };
 
@@ -63,13 +67,16 @@ bool Robot::advance(){
 			working_bot = this;
 			if (comportamientos != NULL) {
 				if (!comportamientos ->advance()){
-					cout << "ERROR NINGUN COMPORTAMIENTO ACTIVADO" << endl;
+					sprintf(error_strp,"Error, el robot no ejecuto ningun comportamiento.");
+					throw error_strp;
 				}
 			} else {
-				cout << "ERROR COMPORTAMIENTO NULO" << endl;
+				sprintf(error_strp,"Error comportamiento nulo.");
+				throw error_strp;
 			}
 			head_table = tmp;
 		} else {
-			cout << "ERROR ESTAS AVANZANDO DESACTIVADO" << endl;
+			sprintf(error_strp,"Error se esta avanzando un robot desactivado.");
+			throw error_strp;
 		}
 };

@@ -74,7 +74,13 @@ int main(int argc, char** argv) {
 	}
 	if (!error_sintactico){
 		cout << "EJECUTANDO EL PROGRAMA:" << endl << endl;
+		try {
 		root_ast->ejecutar();
+		}
+		catch(const char* const errorMessage){
+				cout << endl << endl << errorMessage << endl;
+				return 1;
+		}
 	}
 	return 0;
 }

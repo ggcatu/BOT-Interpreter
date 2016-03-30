@@ -2,7 +2,7 @@
 #define ARB_H
 #include <stdio.h>
 #include <iostream>
-
+#include "variables.h"
 /* Definicion de la clase base ArbolSintactico */
 
 class ArbolSintactico {
@@ -26,6 +26,7 @@ class ArbolSintactico {
 		virtual void deactivate(){;}
 		virtual bool advance(){;}
 		virtual void add_comportamiento(ArbolSintactico * comp){;}
+		virtual void add_value(variable * value){;}
 };
 
 

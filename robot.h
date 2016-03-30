@@ -22,6 +22,7 @@ class Robot {
 	void deactivate();
 
 	bool advance();
+
 };
 
 #endif

@@ -7,6 +7,9 @@ class variable {
 		bool init;
 		variable(int ty): tipo(ty), init(false){};
 		variable(int ty, bool i): tipo(ty), init(i){};
+		virtual variable * clone() {
+			return new variable(tipo,init);
+		}
 };
 
 class variable_int: public variable {
@@ -16,6 +19,9 @@ class variable_int: public variable {
 			valor = new int(0);
 		};
 		variable_int(int ty, int * v, bool i): variable(ty,i), valor(v) {};
+		virtual variable_int * clone(){
+			return new variable_int(tipo, valor, init);
+		}
 };
 
 class variable_bool: public variable {
@@ -23,6 +29,9 @@ class variable_bool: public variable {
 		bool * valor;
 		variable_bool(int ty): variable(ty) {};
 		variable_bool(int ty, bool * v, bool i): variable(ty,i), valor(v) {};
+		virtual variable_bool * clone(){
+			return new variable_bool(tipo, valor, init);
+		}
 };
 
 class variable_char: public variable {
@@ -30,6 +39,9 @@ class variable_char: public variable {
 		char * valor;
 		variable_char(int ty): variable(ty) {};
 		variable_char(int ty, char * v, bool i): variable(ty,i), valor(v) {};
+		virtual variable_char * clone(){
+			return new variable_char(tipo, valor, init);
+		}
 };
 
 #endif

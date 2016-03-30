@@ -190,6 +190,13 @@ class instruccion : public ArbolSintactico {
 			}
 			rigth->add_comportamiento(comp);
 		}
+
+		virtual void add_value(variable * value){
+			if (left != NULL){
+				left->add_value(value);
+			}
+			rigth->add_value(value);
+		}
 };
 
 /* Definicion de la clase nodo de movimientos */
@@ -200,6 +207,7 @@ class intr_movimiento : public ArbolSintactico {
 		ArbolSintactico * down;
 		mov movimiento;
 		intr_movimiento(ArbolSintactico * l, int m) : down(l), movimiento(static_cast<mov>(m)) {check();}
+		intr_movimiento(int m) : movimiento(static_cast<mov>(m)) {}
 		virtual void imprimir(int i){
 			for (int j = 0; j < i; j++) cout << "	";
 			switch(movimiento){
@@ -216,7 +224,9 @@ class intr_movimiento : public ArbolSintactico {
 					cout << "RIGTH:" << endl;
 					break;
 			}
-			down -> imprimir(i + 1);
+			if (down != NULL){
+				down -> imprimir(i + 1);
+			}
 		}
 		/* Chequea que la expresion recibida sea un entero
 			Se debera luego chequear que sea mayor a 0 */
@@ -228,11 +238,14 @@ class intr_movimiento : public ArbolSintactico {
 		}
 
 		virtual void ejecutar(){
-			int mov = * down->get_value();
-			if (mov < 0){
-				cout << " ERROR ";
+			int mov = 1;
+			if (down != NULL){
+				mov = * down->get_value();
+				if (mov < 0){
+					sprintf(error_strp,"Error se esta moviendo en la matriz con un numero negativo. [LINEA: %d]", yylineno);
+					throw error_strp;
+				}
 			}
-
 			switch(movimiento){
 				case UP:
 					working_bot->posicion[0] += mov;
@@ -247,7 +260,7 @@ class intr_movimiento : public ArbolSintactico {
 					working_bot->posicion[1] += mov;
 					break;
 			}
-			cout << "Posicion nueva:" << working_bot->posicion[0] << ", " << working_bot->posicion[1] << " ADDED : " << mov << endl;
+			//cout << "Posicion nueva:" << working_bot->posicion[0] << ", " << working_bot->posicion[1] << " ADDED : " << mov << endl;
 		}
 };
 
@@ -398,7 +411,10 @@ class expr_aritmetica : public ArbolSintactico {
 				case MULT:
 					return new int(*numero_der->get_value() * *numero_izq->get_value());
 				case DIV:
-					if(*numero_der->get_value() == 0) { cout << "ERROR DE DIVISION POR CERO";}
+					if(*numero_der->get_value() == 0) { 
+						sprintf(error_strp,"Error division por cero. [LINEA: %d]", yylineno);
+						throw error_strp;
+						}
 					return new int(*numero_izq->get_value() / *numero_der->get_value());
 				case MOD:
 					return new int(*numero_der->get_value() % *numero_izq->get_value());
@@ -443,7 +459,8 @@ class intr_extra : public ArbolSintactico {
 						switch(head_table->valores["me"]->tipo){
 							case NUMEROS: {
 								if (down -> ident != NUMEROS){
-									cout << "ERROR DE TIPO" << endl;
+									sprintf(error_strp,"Error de tipo al hacer STORE, se esperaba un int [LINEA: %d]", yylineno);
+									throw error_strp;
 								} else {
 									head_table->valores["me"]->init = true; 
 									static_cast<variable_int * >(head_table->valores["me"])->valor = static_cast<expr_aritmetica *>(down)->get_value(); 
@@ -452,7 +469,8 @@ class intr_extra : public ArbolSintactico {
 							}
 							case CHARACTERS: {
 								if (down -> ident != CHARACTERS){
-									cout << "ERROR DE TIPO" << endl;
+									sprintf(error_strp,"Error de tipo al hacer STORE, se esperaba un character [LINEA: %d]", yylineno);
+									throw error_strp;
 								} else {
 									head_table->valores["me"]->init = true; 
 									static_cast<variable_char * >(head_table->valores["me"])->valor = static_cast<character *>(down)->get_character(); 
@@ -461,7 +479,8 @@ class intr_extra : public ArbolSintactico {
 							}
 							case BOOLEANOS: {
 								if (down -> ident != BOOLEANOS){
-									cout << "ERROR DE TIPO" << endl;
+									sprintf(error_strp,"Error de tipo al hacer STORE, se esperaba un booleano [LINEA: %d]", yylineno);
+									throw error_strp;
 								} else {
 									head_table->valores["me"]->init = true; 
 									static_cast<variable_bool * >(head_table->valores["me"])->valor = static_cast<booleano *>(down)->get_bool(); 
@@ -769,7 +788,6 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual void activate(){
-			cout <<" ACTIVANDO ROBOT " << endl;
 			robots[valor]->activate();
 		}
 
@@ -784,6 +802,10 @@ class identificador : public ArbolSintactico {
 
 		virtual void add_comportamiento(ArbolSintactico * comp){
 			robots[valor]->comportamientos = comp;
+		}
+
+		virtual void add_value(variable * value){
+			head_table->valores[valor] = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]->clone();
 		}
 };
 
@@ -830,11 +852,9 @@ class intr_robot : public ArbolSintactico {
 		virtual void ejecutar(){
 			switch(instruccion){
 				case T_ACTIVATE:
-					 cout << "activating robot " << endl;
 					declaraciones->activate();
 					break;
 				case T_DEACTIVATE:
-					// cout << "Desactivando robot " << endl;
 					declaraciones->deactivate();
 					break;
 				case T_ADVANCE:
@@ -860,36 +880,32 @@ class intr_robot : public ArbolSintactico {
 							}
 						}
 					} else {
-						cout << " Error se esta utilizando la variable sin inicializar el bot.";
+						sprintf(error_strp,"Error se esta utilizando la variable sin inicializar el bot. [LINEA: %d]", yylineno);
+						throw error_strp;
 					}
 				break;
 				case T_READ:
 					
 				break;
 				case T_COLLECT:
+				if (declaraciones == NULL){
 					if (matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]->tipo != head_table->valores["me"]->tipo){
-						cout << "Este robot no puede recoger este valor, no coinciden los tipos" << endl;
+						sprintf(error_strp,"Este robot no puede recoger este valor, no coinciden los tipos [LINEA: %d]", yylineno);
+						throw error_strp;
 					}
-					head_table->valores["me"] = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]];
-					// switch(head_table->valores["me"]->tipo){
-					// 		case NUMEROS: {
-					// 			head_table->valores["me"] = 
-					// 			*static_cast<variable_char *>(matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]])->valor 
-					// 			int * numero = static_cast<variable_int * >(head_table->valores["me"])->valor;
-					// 			cout << *numero;
-					// 			break;
-					// 		}
-					// 		case CHARACTERS: {
-					// 			char * character = static_cast<variable_char * >(head_table->valores["me"])->valor;
-					// 			cout << *character;
-					// 			break;
-					// 		}
-					// 		case BOOLEANOS: {
-					// 			bool * valor = static_cast<variable_bool * >(head_table->valores["me"])->valor;
-					// 			cout << * valor;
-					// 			break;
-					// 		}
-					// 	}
+					head_table->valores["me"] = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]->clone();
+				} else {
+					variable * elem = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]];
+					if (elem == NULL){
+						sprintf(error_strp,"Error, recogiendo un valor vacío en la matriz [LINEA: %d]", yylineno);
+						throw error_strp;
+						}
+					if (elem->tipo != head_table->mapa["me"]){
+						sprintf(error_strp,"Este robot no puede recoger este valor, no coinciden los tipos [LINEA: %d]", yylineno);
+						throw error_strp;
+					}
+					declaraciones->add_value(matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]);
+				}			
 				break;
 			}
 		}

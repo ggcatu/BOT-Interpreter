@@ -1,0 +1,26 @@
+create
+	int bot a
+		on activation:
+			read.
+		end
+		on default:
+			send.
+			collect as x.
+			store x.
+			send.
+			drop me * me.
+			send.
+		end
+	end
+	int bot b
+    		on activation:
+      			read.
+			send.
+      			drop 1.
+    		end
+	end
+
+execute
+	activate a,b.
+	advance a.
+end

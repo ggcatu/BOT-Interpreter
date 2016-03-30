@@ -111,7 +111,7 @@ instrRobot 	: COLLECT PUNTO										{$$ = new intr_robot(3);}
 
 			| READ PUNTO										{$$ = new intr_robot(4);}
 
-			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4);}
+			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4); $3->add_variable(head_table->mapa.at("me"),0);}
 			| SEND PUNTO										{$$ = new intr_robot(5);}
 			| RECEIVE PUNTO										{$$ = new intr_robot(6);}
 			;

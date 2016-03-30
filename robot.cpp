@@ -32,6 +32,7 @@ void Robot::activate(){
 				sprintf(error_strp,"Error comportamiento nulo.");
 				throw error_strp;
 			}
+			working_bot = NULL;
 			head_table = tmp;
 		} else {
 			sprintf(error_strp,"Error se esta activando un robot activo.");
@@ -52,6 +53,7 @@ void Robot::deactivate(){
 				sprintf(error_strp,"Error comportamiento nulo.");
 				throw error_strp;
 			}
+			working_bot = NULL;
 			head_table = tmp;
 		} else {
 			sprintf(error_strp,"Error se esta desactivando un robot desactivado.");
@@ -74,6 +76,7 @@ bool Robot::advance(){
 				sprintf(error_strp,"Error comportamiento nulo.");
 				throw error_strp;
 			}
+			working_bot = NULL;
 			head_table = tmp;
 		} else {
 			sprintf(error_strp,"Error se esta avanzando un robot desactivado.");

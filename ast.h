@@ -176,14 +176,10 @@ class instruccion : public ArbolSintactico {
 
 		virtual bool advance(){
 			if (left != NULL){
-				if (left->advance()) {
-					return true;
-				}
+				left->advance();
 			}
-			if (rigth->advance()){
-				return true;
-			}
-			return false;
+			rigth->advance();
+			return true;
 		}
 
 		virtual void add_comportamiento(ArbolSintactico * comp){
@@ -330,7 +326,6 @@ class intr_guardia : public ArbolSintactico {
 					}		
 					break;
 				case WHILE:
-					condicion -> imprimir(0);
 					while (* condicion->get_bool()) {
 						cuerpo -> ejecutar();
 					}
@@ -492,8 +487,10 @@ class intr_extra : public ArbolSintactico {
 						}
 					break;
 					case DROP:
+						//cout <<"DROPEO" << endl;
 						switch(down -> ident){
 							case NUMEROS: {
+
 								variable_int * tmp = new variable_int(NUMEROS, down->get_value(), true);
 								matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]] = tmp;
 								break;
@@ -774,11 +771,11 @@ class identificador : public ArbolSintactico {
 				head_table->valores["me"] = temp;
 				head_table->padre->valores[valor] = head_table->valores["me"];
 			} else {
-				if (head_table->mapa.count(valor) > 0) {
-					const char * c = valor.c_str();
-					sprintf(error_strp,"%s ya habia sido declarada antes. [LINEA: %d]", c, yylineno);
-					throw error_strp;
-				}
+				// if (head_table->mapa.count(valor) > 0) {
+				// 	const char * c = valor.c_str();
+				// 	sprintf(error_strp,"%s ya habia sido declarada antes. [LINEA: %d]", c, yylineno);
+				// 	throw error_strp;
+				// }
 				head_table->mapa[valor] = tipo;
 			}
 			ident = tipo;
@@ -786,6 +783,9 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual int * get_value(){
+			if (working_bot != NULL){
+				return static_cast<variable_int * >(head_table->valores[valor])->valor;
+			}
 			if (head_table->valores[valor]->init && robots[valor]->activated){
 				return static_cast<variable_int * >(head_table->valores[valor])->valor;
 			} else {
@@ -910,6 +910,7 @@ class intr_robot : public ArbolSintactico {
 						throw error_strp;
 					}
 				break;
+
 				case T_READ:{
 					switch(head_table->valores["me"]->tipo){
 						case NUMEROS: {
@@ -996,6 +997,7 @@ class intr_robot : public ArbolSintactico {
 						throw error_strp;
 					}
 					declaraciones->add_value(matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]);
+
 				}			
 				break;
 			}
@@ -1106,8 +1108,7 @@ class inside_bot : public ArbolSintactico {
 
 		virtual bool advance(){
 			if (static_cast<on_condicion *>(condicion)->condicion == 2 || 
-				static_cast<on_condicion *>(condicion)->condicion == 3 &&
-				* condicion->get_bool()){ 
+				static_cast<on_condicion *>(condicion)->condicion == 3 && * condicion->get_bool()){ 
 					instruccion -> ejecutar();
 					return true;
 			}

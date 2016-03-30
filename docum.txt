@@ -1,14 +1,17 @@
 create
 	char bot c
 		on activation:
-			store '\''.
+			drop 5'.
 		end
-		on true:
-			send.
-			send.send.send.
+	end
+	bool bot b
+		on activation:
+			collect.
 		end
 	end
 execute
-	activate c.
-	advance c.
+	if b:
+		activate b.
+	end
+	
 end

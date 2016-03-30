@@ -609,7 +609,6 @@ class expr_booleana : public ArbolSintactico {
 				case MENOR:
 					return new bool(*bool_izq->get_value() < *bool_der->get_value());
 				case MAYOR:
-					cout << *bool_izq->get_value() << " ES MAYOR " << endl;
 					return new bool(*bool_izq->get_value() > *bool_der->get_value());
 				case MENORIGUAL:
 					return new bool(*bool_izq->get_value() <= *bool_der->get_value());
@@ -787,7 +786,31 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual int * get_value(){
-			return static_cast<variable_int * >(head_table->valores[valor])->valor;
+			if (head_table->valores[valor]->init && robots[valor]->activated){
+				return static_cast<variable_int * >(head_table->valores[valor])->valor;
+			} else {
+				sprintf(error_strp,"Error se esta utilizando la variable sin inicializar o activar el robot");
+				throw error_strp;
+			}
+			
+		}
+
+		virtual bool * get_bool(){
+			if (head_table->valores[valor]->init && robots[valor]->activated){
+				return static_cast<variable_bool * >(head_table->valores[valor])->valor;
+			} else {
+				sprintf(error_strp,"Error se esta utilizando la variable sin inicializar o activar el robot");
+				throw error_strp;
+			}
+		}
+
+		virtual char * get_character(){
+			if (head_table->valores[valor]->init && robots[valor]->activated){
+				return static_cast<variable_char * >(head_table->valores[valor])->valor;
+			} else {
+				sprintf(error_strp,"Error se esta utilizando la variable sin inicializar o activar el robot");
+				throw error_strp;
+			}
 		}
 
 		virtual void activate(){
@@ -956,6 +979,11 @@ class intr_robot : public ArbolSintactico {
 				}
 				break;
 				case T_COLLECT:
+				variable * elem = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]];
+				if (elem == NULL){
+						sprintf(error_strp,"Error, recogiendo un valor vacío en la matriz [LINEA: %d]", yylineno);
+						throw error_strp;
+				}
 				if (declaraciones == NULL){
 					if (matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]->tipo != head_table->valores["me"]->tipo){
 						sprintf(error_strp,"Este robot no puede recoger este valor, no coinciden los tipos [LINEA: %d]", yylineno);
@@ -963,11 +991,6 @@ class intr_robot : public ArbolSintactico {
 					}
 					head_table->valores["me"] = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]->clone();
 				} else {
-					variable * elem = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]];
-					if (elem == NULL){
-						sprintf(error_strp,"Error, recogiendo un valor vacío en la matriz [LINEA: %d]", yylineno);
-						throw error_strp;
-						}
 					if (elem->tipo != head_table->mapa["me"]){
 						sprintf(error_strp,"Este robot no puede recoger este valor, no coinciden los tipos [LINEA: %d]", yylineno);
 						throw error_strp;

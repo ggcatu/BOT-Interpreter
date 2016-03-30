@@ -6,12 +6,14 @@ create
 	end
 	bool bot b
 		on activation:
-			collect.
+			up.
+		end
+		on me = true:
+			down.
 		end
 	end
 execute
-	if b:
-		activate b.
-	end
+	activate b.
+	advance b.
 	
 end

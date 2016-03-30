@@ -1012,7 +1012,31 @@ class me : public ArbolSintactico {
 		}
 
 		virtual int * get_value(){
-			return static_cast<variable_int *>(head_table->valores["me"])->valor;
+			if (head_table->valores["me"]->init && working_bot->activated){
+				return static_cast<variable_int * >(head_table->valores["me"])->valor;
+			} else {
+				sprintf(error_strp,"Error se esta utilizando la variable ME sin inicializar o activar el robot");
+				throw error_strp;
+			}
+			
+		}
+
+		virtual bool * get_bool(){
+					if (head_table->valores["me"]->init && working_bot->activated){
+				return static_cast<variable_bool * >(head_table->valores["me"])->valor;
+			} else {
+				sprintf(error_strp,"Error se esta utilizando la variable ME sin inicializar o activar el robot");
+				throw error_strp;
+			}
+		}
+
+		virtual char * get_character(){
+			if (head_table->valores["me"]->init && working_bot->activated){
+				return static_cast<variable_char * >(head_table->valores["me"])->valor;
+			} else {
+				sprintf(error_strp,"Error se esta utilizando la variable ME sin inicializar o activar el robot");
+				throw error_strp;
+			}
 		}
 }; 
 

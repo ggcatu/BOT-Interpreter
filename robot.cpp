@@ -19,6 +19,7 @@ Robot::Robot(int ty, tabla_simbolos * head){
 }
 
 void Robot::activate(){
+	// cout << "Aqui vamos " << endl;
 		if (!activated){
 			// Cambiar tabla de simbolos
 			tabla_simbolos * tmp = head_table;

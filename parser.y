@@ -15,7 +15,7 @@ extern char * yytext;
 ArbolSintactico * root_ast;
 tabla_simbolos * head_table = NULL;
 tabla_simbolos * tmp_table = NULL;
-map<string,Robot *> robots;
+map<string,Robot *>  robots;
 bool error_sintactico = 0; 
 void yyerror (char const *s) 
 {	error_sintactico = 1;

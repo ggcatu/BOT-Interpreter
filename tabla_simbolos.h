@@ -19,8 +19,9 @@ class tabla_simbolos {
 		map<string,int> mapa;
 		map<string,variable *> valores;
 		tabla_simbolos * padre;
-		map<string,Robot *> * robots;
+		map<string,Robot *> robots;
 		tabla_simbolos();
+		tabla_simbolos(tabla_simbolos * pe);
 		void print() { 
 			for(map<string, int>::const_iterator it = mapa.begin();
 			    it != mapa.end(); ++it)
@@ -31,6 +32,14 @@ class tabla_simbolos {
 		void print_val() { 
 			for(map<string, variable *>::const_iterator it = valores.begin();
 			    it != valores.end(); ++it)
+			{
+			    cout << it->first.c_str() << " " << it->second << endl;
+			}
+		}
+
+		void print_rob() {
+			for(map<string, Robot *>::const_iterator it = robots.begin();
+			    it != robots.end(); ++it)
 			{
 			    cout << it->first.c_str() << " " << it->second << endl;
 			}

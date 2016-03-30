@@ -115,8 +115,9 @@ class raiz : public ArbolSintactico {
 			}
 		}
 		virtual void ejecutar(){
-			cout << "Ejecutando raiz" << endl;
-			head_table = &table;
+			//cout << "Ejecutando raiz" << endl;
+			head_table = new tabla_simbolos(&table);
+			//head_table->print_rob();
 			ejecucion -> ejecutar();
 			if (head_table->padre != NULL){
 				head_table = head_table->padre;
@@ -255,6 +256,7 @@ class intr_movimiento : public ArbolSintactico {
 			}
 			switch(movimiento){
 				case UP:
+
 					working_bot->posicion[0] += mov;
 					break;
 				case DOWN:
@@ -267,7 +269,7 @@ class intr_movimiento : public ArbolSintactico {
 					working_bot->posicion[1] += mov;
 					break;
 			}
-			//cout << "Posicion nueva:" << working_bot->posicion[0] << ", " << working_bot->posicion[1] << " ADDED : " << mov << endl;
+		//	cout << "Posicion nueva:" << working_bot->posicion[0] << ", " << working_bot->posicion[1] << " ADDED : " << mov << endl;
 		}
 };
 
@@ -773,7 +775,7 @@ class identificador : public ArbolSintactico {
 					sprintf(error_strp,"%s ya habia sido declarada antes. [LINEA: %d]", c, yylineno);
 					throw error_strp;
 				}
-				robots[valor] = new Robot(tipo, head_table);
+				(head_table->padre->robots)[valor] = new Robot(tipo, head_table);
 				// Declaracion de simbolos
 				head_table->padre->mapa[valor] = tipo;
 				head_table->mapa["me"] = tipo;
@@ -799,8 +801,9 @@ class identificador : public ArbolSintactico {
 				return static_cast<variable_int * >(head_table->valores[valor])->valor;
 			}
 			 // cout << valor << head_table->valores[valor]->init << " ACTIVATED " << endl;
-			 // cout << robots[valor]->activated << " ACTIVATED " << endl;
-			if (head_table->valores[valor]->init && robots[valor]->activated){
+			 // cout << (head_table->padre->robots)[valor]->activated << " ACTIVATED " << endl;
+//			cout << "trying " << valor << (head_table->padre->robots)[valor]->activated <<  endl;
+			if (head_table->valores[valor]->init && (head_table->robots)[valor]->activated){
 				return static_cast<variable_int * >(head_table->valores[valor])->valor;
 			} else {
 				sprintf(error_strp,"Error se esta utilizando la variable sin inicializar o activar el robot");
@@ -810,7 +813,7 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual bool * get_bool(){
-			if (head_table->valores[valor]->init && robots[valor]->activated){
+			if (head_table->valores[valor]->init && (head_table->padre->robots)[valor]->activated){
 				return static_cast<variable_bool * >(head_table->valores[valor])->valor;
 			} else {
 				sprintf(error_strp,"Error se esta utilizando la variable sin inicializar o activar el robot");
@@ -819,7 +822,7 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual char * get_character(){
-			if (head_table->valores[valor]->init && robots[valor]->activated){
+			if (head_table->valores[valor]->init && (head_table->padre->robots)[valor]->activated){
 				return static_cast<variable_char * >(head_table->valores[valor])->valor;
 			} else {
 				sprintf(error_strp,"Error se esta utilizando la variable sin inicializar o activar el robot");
@@ -828,20 +831,20 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual void activate(){
-			robots[valor]->activate();
+			(head_table->robots)[valor]->activate();
 		}
 
 		virtual void deactivate(){
-			robots[valor]->deactivate();
+			(head_table->robots)[valor]->deactivate();
 		}
 
 		virtual bool advance(){
-			robots[valor]->advance();
+			(head_table->robots)[valor]->advance();
 			return false;
 		}
 
 		virtual void add_comportamiento(ArbolSintactico * comp){
-			robots[valor]->comportamientos = comp;
+			(head_table->padre->robots)[valor]->comportamientos = comp;
 		}
 
 		virtual void add_value(variable * value){
@@ -927,6 +930,8 @@ class intr_robot : public ArbolSintactico {
 				break;
 
 				case T_READ:{
+					// cout << " Donde estamos " << endl;
+					// head_table->print_val();
 					switch(head_table->valores["me"]->tipo){
 						case NUMEROS: {
 							int leidos, valor;
@@ -1030,7 +1035,6 @@ class intr_robot : public ArbolSintactico {
 						sprintf(error_strp,"Este robot no puede recoger este valor, no coinciden los tipos [LINEA: %d]", yylineno);
 						throw error_strp;
 					}
-					cout << "Por aqui anda el error" << endl;
 					declaraciones->add_value(matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]);
 				}			
 				break;
@@ -1131,7 +1135,7 @@ class inside_bot : public ArbolSintactico {
 		virtual void activate(){
 			if (static_cast<on_condicion *>(condicion)->condicion == 0){
 				instruccion->ejecutar();
-			}
+ 			}
 		}
 
 		virtual void deactivate(){

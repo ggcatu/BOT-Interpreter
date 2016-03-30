@@ -10,12 +10,13 @@ class Robot {
 		int tipo ;
 		ArbolSintactico * valor;
 		ArbolSintactico * comportamientos;
-		bool init;
 		bool activated;
 		tabla_simbolos * tabla;
 		int posicion[2];
 
 	Robot(int ty, tabla_simbolos * head);
+
+	Robot(Robot * pe);
 
 	void activate();
 

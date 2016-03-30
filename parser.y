@@ -67,7 +67,10 @@ void yyerror (char const *s)
 %%
 
 S			: lambda exec 										{$$ = new raiz($2); root_ast = new ArbolSintactico($$);}
-			| lambda CREATE lDecs exec 							{$$ = new raiz($3, $4); root_ast = new ArbolSintactico($$); if (head_table->padre != NULL) {head_table = head_table->padre;}}
+			| lambda CREATE lDecs exec 							{$$ = new raiz($3, $4); root_ast = new ArbolSintactico($$); 
+																	static_cast<raiz *>($$)->table = *head_table; 
+																	if (head_table->padre != NULL) {head_table = head_table->padre;} 
+																}
 			;
 lambda		: {tmp_table = new tabla_simbolos(); tmp_table->padre = head_table; head_table = tmp_table;}
 			;

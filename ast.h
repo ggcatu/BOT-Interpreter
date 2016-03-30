@@ -115,7 +115,12 @@ class raiz : public ArbolSintactico {
 			}
 		}
 		virtual void ejecutar(){
+			cout << "Ejecutando raiz" << endl;
+			head_table = &table;
 			ejecucion -> ejecutar();
+			if (head_table->padre != NULL){
+				head_table = head_table->padre;
+			}
 		}
 };
 
@@ -176,10 +181,14 @@ class instruccion : public ArbolSintactico {
 
 		virtual bool advance(){
 			if (left != NULL){
-				left->advance();
+				if (left->advance()){
+					return true;
+				}
 			}
-			rigth->advance();
-			return true;
+			if (rigth->advance()){
+				return true;
+			}
+			return false;
 		}
 
 		virtual void add_comportamiento(ArbolSintactico * comp){
@@ -606,6 +615,7 @@ class expr_booleana : public ArbolSintactico {
 				case MENOR:
 					return new bool(*bool_izq->get_value() < *bool_der->get_value());
 				case MAYOR:
+					// cout << *bool_izq->get_value() << " > " << *bool_der->get_value() << endl;
 					return new bool(*bool_izq->get_value() > *bool_der->get_value());
 				case MENORIGUAL:
 					return new bool(*bool_izq->get_value() <= *bool_der->get_value());
@@ -745,6 +755,18 @@ class identificador : public ArbolSintactico {
 		}
 		/* Se agrega la variable a las tablas de simbolos correspondientes */
 		void add_variable(int tipo, bool doble){
+			variable * temp;
+				switch(tipo){
+					case NUMEROS:
+						temp = new variable_int(tipo);
+					break;
+					case BOOLEANOS:
+						temp = new variable_bool(tipo);
+					break;
+					case CHARACTERS:
+						temp = new variable_char(tipo);
+					break;
+			}
 			if (doble){
 				if (head_table->padre->mapa.count(valor) > 0) {
 					const char * c = valor.c_str();
@@ -756,18 +778,7 @@ class identificador : public ArbolSintactico {
 				head_table->padre->mapa[valor] = tipo;
 				head_table->mapa["me"] = tipo;
 				// Declaracion de valores
-				variable * temp;
-				switch(tipo){
-					case NUMEROS:
-						temp = new variable_int(tipo);
-					break;
-					case BOOLEANOS:
-						temp = new variable_bool(tipo);
-					break;
-					case CHARACTERS:
-						temp = new variable_char(tipo);
-					break;
-				}
+				
 				head_table->valores["me"] = temp;
 				head_table->padre->valores[valor] = head_table->valores["me"];
 			} else {
@@ -776,6 +787,7 @@ class identificador : public ArbolSintactico {
 				// 	sprintf(error_strp,"%s ya habia sido declarada antes. [LINEA: %d]", c, yylineno);
 				// 	throw error_strp;
 				// }
+				head_table->valores[valor] = temp;
 				head_table->mapa[valor] = tipo;
 			}
 			ident = tipo;
@@ -786,6 +798,8 @@ class identificador : public ArbolSintactico {
 			if (working_bot != NULL){
 				return static_cast<variable_int * >(head_table->valores[valor])->valor;
 			}
+			 // cout << valor << head_table->valores[valor]->init << " ACTIVATED " << endl;
+			 // cout << robots[valor]->activated << " ACTIVATED " << endl;
 			if (head_table->valores[valor]->init && robots[valor]->activated){
 				return static_cast<variable_int * >(head_table->valores[valor])->valor;
 			} else {
@@ -823,7 +837,7 @@ class identificador : public ArbolSintactico {
 
 		virtual bool advance(){
 			robots[valor]->advance();
-			return true;
+			return false;
 		}
 
 		virtual void add_comportamiento(ArbolSintactico * comp){
@@ -831,6 +845,7 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual void add_value(variable * value){
+			head_table->valores[valor]->init = true;
 			head_table->valores[valor] = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]->clone();
 		}
 };
@@ -990,14 +1005,33 @@ class intr_robot : public ArbolSintactico {
 						sprintf(error_strp,"Este robot no puede recoger este valor, no coinciden los tipos [LINEA: %d]", yylineno);
 						throw error_strp;
 					}
-					head_table->valores["me"] = matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]->clone();
+					// Por que clonar no sirve?
+					switch(head_table->valores["me"]->tipo){
+						case NUMEROS: {
+							int valor = * static_cast<variable_int *>(matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]])->valor;
+							static_cast<variable_int * >(head_table->valores["me"])->valor = new int(valor);
+							break;
+						}
+						case BOOLEANOS: {
+							bool valor = * static_cast<variable_bool *>(matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]])->valor;
+							static_cast<variable_bool * >(head_table->valores["me"])->valor = new bool(valor);
+							break;
+						}
+						case CHARACTERS: {
+							char valor = * static_cast<variable_char *>(matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]])->valor;
+							static_cast<variable_char * >(head_table->valores["me"])->valor = new char(valor);
+							break;
+						}
+					}
+					head_table->valores["me"]->init = true;
+					// head_table->valores["me"] =->clone();
 				} else {
 					if (elem->tipo != head_table->mapa["me"]){
 						sprintf(error_strp,"Este robot no puede recoger este valor, no coinciden los tipos [LINEA: %d]", yylineno);
 						throw error_strp;
 					}
+					cout << "Por aqui anda el error" << endl;
 					declaraciones->add_value(matriz_bot[working_bot->posicion[0]][working_bot->posicion[1]]);
-
 				}			
 				break;
 			}

@@ -17,9 +17,11 @@ de las clases y funciones implementadas en definiciones.cpp
 #include <vector>
 #include <stdlib.h>
 #include <stdexcept>
+#include "robot.h"
 #include "definiciones.h"
 #include "ast.h"
 #include "parser.tab.h"
+
 #include <map>
 
 using namespace std;

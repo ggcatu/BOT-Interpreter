@@ -796,14 +796,15 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual int * get_value(){
-			if (working_bot != NULL){
-				return static_cast<variable_int * >(head_table->valores[valor])->valor;
+			tabla_simbolos * tmp = head_table;
+			while (tmp->mapa.count(valor) == 0){
+				tmp = head_table->padre;
 			}
-			 // cout << valor << head_table->valores[valor]->init << " ACTIVATED " << endl;
-			 // cout << (head_table->padre->robots)[valor]->activated << " ACTIVATED " << endl;
-//			cout << "trying " << valor << (head_table->padre->robots)[valor]->activated <<  endl;
-			if (head_table->valores[valor]->init && (head_table->robots)[valor]->activated){
-				return static_cast<variable_int * >(head_table->valores[valor])->valor;
+			if (working_bot != NULL){
+				return static_cast<variable_int * >(tmp->valores[valor])->valor;
+			}
+			if (tmp->valores[valor]->init && (tmp->robots)[valor]->activated){
+				return static_cast<variable_int * >(tmp->valores[valor])->valor;
 			} else {
 				sprintf(error_strp,"Error se esta utilizando la variable sin inicializar o activar el robot");
 				throw error_strp;
@@ -812,8 +813,12 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual bool * get_bool(){
-			if (head_table->valores[valor]->init && (head_table->padre->robots)[valor]->activated){
-				return static_cast<variable_bool * >(head_table->valores[valor])->valor;
+			tabla_simbolos * tmp = head_table;
+			while (tmp->mapa.count(valor) == 0){
+				tmp = head_table->padre;
+			}
+			if (tmp->valores[valor]->init && (tmp->padre->robots)[valor]->activated){
+				return static_cast<variable_bool * >(tmp->valores[valor])->valor;
 			} else {
 				sprintf(error_strp,"Error se esta utilizando la variable sin inicializar o activar el robot");
 				throw error_strp;
@@ -821,8 +826,12 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual char * get_character(){
-			if (head_table->valores[valor]->init && (head_table->padre->robots)[valor]->activated){
-				return static_cast<variable_char * >(head_table->valores[valor])->valor;
+			tabla_simbolos * tmp = head_table;
+			while (tmp->mapa.count(valor) == 0){
+				tmp = head_table->padre;
+			}
+			if (tmp->valores[valor]->init && (tmp->padre->robots)[valor]->activated){
+				return static_cast<variable_char * >(tmp->valores[valor])->valor;
 			} else {
 				sprintf(error_strp,"Error se esta utilizando la variable sin inicializar o activar el robot");
 				throw error_strp;

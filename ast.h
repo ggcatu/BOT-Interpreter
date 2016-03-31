@@ -616,7 +616,7 @@ class expr_booleana : public ArbolSintactico {
 				case MENOR:
 					return new bool(*bool_izq->get_value() < *bool_der->get_value());
 				case MAYOR:
-					// cout << *bool_izq->get_value() << " > " << *bool_der->get_value() << endl;
+				//	cout << *bool_izq->get_value() << " > " << *bool_der->get_value() << endl;
 					return new bool(*bool_izq->get_value() > *bool_der->get_value());
 				case MENORIGUAL:
 					return new bool(*bool_izq->get_value() <= *bool_der->get_value());
@@ -839,15 +839,27 @@ class identificador : public ArbolSintactico {
 		}
 
 		virtual void activate(){
-			(head_table->robots)[valor]->activate();
+			tabla_simbolos * tmp = head_table;
+			while(tmp->robots.count(valor) == 0){
+				tmp = head_table->padre;
+			}
+			(tmp->robots)[valor]->activate();
 		}
 
 		virtual void deactivate(){
-			(head_table->robots)[valor]->deactivate();
+			tabla_simbolos * tmp = head_table;
+			while(tmp->robots.count(valor) == 0){
+				tmp = head_table->padre;
+			}
+			(tmp->robots)[valor]->deactivate();
 		}
 
 		virtual bool advance(){
-			(head_table->robots)[valor]->advance();
+			tabla_simbolos * tmp = head_table;
+			while(tmp->robots.count(valor) == 0){
+				tmp = head_table->padre;
+			}
+			(tmp->robots)[valor]->advance();
 			return false;
 		}
 
@@ -946,8 +958,8 @@ class intr_robot : public ArbolSintactico {
 							leidos = scanf("%s", numero);
 							string tmp(numero);
 							for(int i = 0; i < tmp.length(); i++){
-								if (!isdigit(numero[i])){
-									sprintf(error_strp,"Error de lectura en el terminal, se esperaba un entero.", yylineno);
+								if (!isdigit(numero[i]) && (i == 0) && !(numero[i] == '-')){
+									sprintf(error_strp,"Error de lectura en el terminal, se esperaba un entero.");
 									throw error_strp;
 								}
 							}

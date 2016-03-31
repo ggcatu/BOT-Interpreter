@@ -51,7 +51,7 @@ void yyerror (char const *s)
 %token BOT CREATE EXECUTE ACTIVATE DEACTIVATE STORE COLLECT DROP ADVANCE ON
 %token ACTIVATION DEACTIVATION DEFAULT
 %token UP DOWN LEFT RIGHT
-%token READ SEND RECEIVE
+%token READ SEND 
 %token IF ELSE END WHILE
 %token INT BOOL CHAR
 %token AS ME
@@ -116,7 +116,6 @@ instrRobot 	: COLLECT PUNTO										{$$ = new intr_robot(3);}
 
 			| READ AS decl PUNTO								{$$ = new intr_robot($3, 4); $3->add_variable(head_table->mapa.at("me"),0);}
 			| SEND PUNTO										{$$ = new intr_robot(5);}
-			| RECEIVE PUNTO										{$$ = new intr_robot(6);}
 			;
 
 decl		: IDENTIFIER										{$$ = new identificador($1);}

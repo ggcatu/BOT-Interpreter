@@ -61,7 +61,6 @@ int yycolumn = 1;
 "advance"						return ADVANCE;
 "read"							return READ;
 "send"							return SEND;
-"receive"						return RECEIVE;
 "store"							return STORE;
 "collect"						return COLLECT;
 "drop"							return DROP;

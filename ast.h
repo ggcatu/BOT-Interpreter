@@ -877,7 +877,7 @@ class identificador : public ArbolSintactico {
 /* Definicion de la clase que engloba las instrucciones del robot */
 
 class intr_robot : public ArbolSintactico {
-		enum inst { T_ACTIVATE, T_DEACTIVATE, T_ADVANCE, T_COLLECT, T_READ, SEND, RECEIVE };
+		enum inst { T_ACTIVATE, T_DEACTIVATE, T_ADVANCE, T_COLLECT, T_READ, SEND};
 	public:
 		ArbolSintactico * declaraciones;
 		inst instruccion;
@@ -903,9 +903,6 @@ class intr_robot : public ArbolSintactico {
 					break;
 				case SEND:
 					cout << "SEND." << endl;
-					break;
-				case RECEIVE:
-					cout << "RECEIVE:" << endl;
 					break;
 			}
 			if (declaraciones != NULL){

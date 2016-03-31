@@ -1,5 +1,5 @@
-ContBot: scanner.o robot.o lex.yy.c parser.tab.c definiciones.o ast.h ast.cpp tabla_simbolos.o
-	g++ scanner.o definiciones.o robot.o lex.yy.c parser.tab.c ast.cpp tabla_simbolos.o -o ContBot
+bot: scanner.o robot.o lex.yy.c parser.tab.c definiciones.o ast.h ast.cpp tabla_simbolos.o
+	g++ scanner.o definiciones.o robot.o lex.yy.c parser.tab.c ast.cpp tabla_simbolos.o -o bot
 
 scanner.o: scanner.cpp parser.tab.c robot.o
 	g++ -c scanner.cpp definiciones.cpp
@@ -20,4 +20,4 @@ parser.tab.c: parser.y
 	bison -d parser.y
 
 clean:
-	rm lex.yy.c parser.tab.c parser.tab.h scanner.o definiciones.o
+	rm lex.yy.c parser.tab.c parser.tab.h scanner.o definiciones.o robot.o tabla_simbolos.o bot
